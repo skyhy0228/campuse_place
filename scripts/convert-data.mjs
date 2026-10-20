@@ -1,10 +1,24 @@
 // XLSX(정규화데이터 시트) → public/data/places.json 변환
 // 사용법: npm run data
-// 원본에 없는 값은 만들지 않는다. 공란과 '없음'은 빈 문자열로 둔다.
+// 원본 XLSX 는 수정하지 않는다. 정리 규칙은 scripts/lib/derive.mjs 에 있으며, 적용 결과는 변환 보고서로 출력한다.
+// 원본에 없는 사실(운영시간, 가격, 주소 등)은 만들지 않는다. 공란과 '없음'은 빈 문자열로 둔다.
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import XLSX from "xlsx";
+import {
+  classifyCampus,
+  cleanMenu,
+  cleanName,
+  cleanSummary,
+  longText,
+  parseChecked,
+  parseHours,
+  parsePrice,
+  priceBand,
+  splitLocation,
+  text,
+} from "./lib/derive.mjs";
 import { placeId } from "./place-id.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -27,47 +41,6 @@ const COLUMNS = {
   details: "자세한 설명",
   recommendations: "추천수",
 };
-
-const EMPTY_MARKERS = new Set(["없음", "null", "undefined", "nan", "n/a", "-"]);
-
-function text(value) {
-  const s = String(value ?? "").replace(/\s+/g, " ").trim();
-  return EMPTY_MARKERS.has(s.toLowerCase()) ? "" : s;
-}
-
-// 자세한 설명은 ' / ' 구분자를 쓰므로 줄바꿈만 보존하고 공백은 그대로 둔다.
-function longText(value) {
-  const s = String(value ?? "").replace(/[ \t]+/g, " ").trim();
-  return EMPTY_MARKERS.has(s.toLowerCase()) ? "" : s;
-}
-
-const pad = (n) => String(n).padStart(2, "0");
-
-function isRealDate(y, m, d) {
-  const date = new Date(Date.UTC(y, m - 1, d));
-  return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d;
-}
-
-// 완전한 날짜는 YYYY-MM-DD, 연월만 있으면 YYYY-MM으로 표시하고 정렬에는 해당 월 1일을 쓴다.
-// 연도가 두 자리인 값 등 해석이 불확실한 값은 원본을 그대로 보여주고 정렬에서는 뒤로 보낸다.
-function parseChecked(raw) {
-  const value = text(raw);
-  if (!value) return { display: "", sort: "" };
-  const full = value.match(/^(\d{4})\s*-\s*(\d{1,2})\s*-\s*(\d{1,2})$/);
-  if (full) {
-    const [y, m, d] = full.slice(1).map(Number);
-    if (isRealDate(y, m, d)) {
-      const iso = `${y}-${pad(m)}-${pad(d)}`;
-      return { display: iso, sort: iso };
-    }
-  }
-  const month = value.match(/^(\d{4})\s*-\s*(\d{1,2})$/);
-  if (month) {
-    const [y, m] = month.slice(1).map(Number);
-    if (m >= 1 && m <= 12) return { display: `${y}-${pad(m)}`, sort: `${y}-${pad(m)}-01` };
-  }
-  return { display: value, sort: "" };
-}
 
 // 여러 링크가 ' | '로 합쳐져 있거나 끝에 불필요한 문자가 붙은 경우를 정리한다.
 // naver.me 단축 링크를 우선하고, 없으면 map.naver.com 링크를 쓴다.
@@ -107,51 +80,125 @@ function main() {
   if (missingColumns.length) throw new Error(`누락된 컬럼: ${missingColumns.join(", ")}`);
 
   const imageMap = fs.existsSync(imageMapPath) ? JSON.parse(fs.readFileSync(imageMapPath, "utf8")) : {};
+  const allNames = new Set(rows.map((r) => text(r[COLUMNS.name])));
+
+  const report = {
+    renamed: [],
+    summaryReplaced: 0,
+    summaryCleared: 0,
+    menuCleaned: 0,
+    dateFixed: [],
+    dateUnresolved: [],
+    hoursParsed: 0,
+    hoursUnparsed: [],
+    pricesBanded: 0,
+    campusIn: 0,
+    campusOut: 0,
+    campusUnknown: 0,
+  };
 
   const places = [];
-  const seen = new Set();
+  const seenIds = new Set();
+  const usedNames = new Set();
   let skippedNoName = 0;
+
   for (const row of rows) {
-    const name = text(row[COLUMNS.name]);
-    if (!name) {
+    const originalName = text(row[COLUMNS.name]);
+    if (!originalName) {
       skippedNoName += 1;
       continue;
     }
-    const id = placeId(name);
-    if (seen.has(id)) throw new Error(`중복 이름/ID: ${name}`);
-    seen.add(id);
+    // ID와 이미지 연결은 원본 이름 기준이라, 표시 이름을 정리해도 즐겨찾기가 유지된다.
+    const id = placeId(originalName);
+    if (seenIds.has(id)) throw new Error(`중복 이름/ID: ${originalName}`);
+    seenIds.add(id);
 
-    const checked = parseChecked(row[COLUMNS.checked]);
+    let name = cleanName(originalName);
+    if (name !== originalName) {
+      // 정리한 이름이 다른 항목과 겹치면 원본 이름을 그대로 쓴다.
+      if (allNames.has(name) || usedNames.has(name)) name = originalName;
+      else report.renamed.push(`${originalName} → ${name}`);
+    }
+    usedNames.add(name);
+
+    const details = longText(row[COLUMNS.details]);
+    const rawSummary = text(row[COLUMNS.summary]);
+    const summary = cleanSummary(rawSummary, details, originalName);
+    if (summary !== rawSummary) {
+      if (summary) report.summaryReplaced += 1;
+      else report.summaryCleared += 1;
+    }
+
+    const rawMenu = text(row[COLUMNS.menu]);
+    const menu = cleanMenu(rawMenu);
+    if (menu !== rawMenu) report.menuCleaned += 1;
+
+    const rawChecked = text(row[COLUMNS.checked]);
+    const checked = parseChecked(rawChecked);
+    if (rawChecked && checked.display !== rawChecked) report.dateFixed.push(`${rawChecked} → ${checked.display}`);
+    if (rawChecked && !checked.sort) report.dateUnresolved.push(`${originalName}: ${rawChecked}`);
+
+    const { location, locationNotes } = splitLocation(row[COLUMNS.location]);
+    const campus = classifyCampus(location, locationNotes);
+    if (campus === "in") report.campusIn += 1;
+    else if (campus === "out") report.campusOut += 1;
+    else report.campusUnknown += 1;
+
+    const hours = text(row[COLUMNS.hours]);
+    const schedule = parseHours(hours);
+    if (hours) {
+      if (schedule) report.hoursParsed += 1;
+      else report.hoursUnparsed.push(`${originalName}: ${hours.slice(0, 60)}`);
+    }
+
+    const price = text(row[COLUMNS.price]);
+    const { priceMin, free } = parsePrice(price);
+    const band = priceBand(priceMin, free);
+    if (band) report.pricesBanded += 1;
+
     places.push({
       id,
       name,
       category: text(row[COLUMNS.category]),
-      location: text(row[COLUMNS.location]),
+      location,
+      locationNotes,
+      campus,
       mapUrl: pickNaverMapUrl(row[COLUMNS.map]),
-      hours: text(row[COLUMNS.hours]),
-      price: text(row[COLUMNS.price]),
-      menu: text(row[COLUMNS.menu]),
-      summary: text(row[COLUMNS.summary]),
-      details: longText(row[COLUMNS.details]),
+      hours,
+      schedule,
+      price,
+      priceBand: band,
+      menu,
+      summary,
+      details,
       recommendations: parseRecommendations(row[COLUMNS.recommendations]),
       checkedAt: checked.display,
       checkedSort: checked.sort,
-      images: imageMap[name.normalize("NFC")] ?? [],
+      images: imageMap[originalName.normalize("NFC")] ?? [],
     });
   }
 
   if (places.length + skippedNoName !== rows.length) throw new Error("행 수 검증 실패");
 
   fs.mkdirSync(outDir, { recursive: true });
-  fs.writeFileSync(outPath, JSON.stringify({ count: places.length, places }, null, 2) + "\n", "utf8");
+  fs.writeFileSync(outPath, JSON.stringify({ count: places.length, places }) + "\n", "utf8");
 
-  const withImages = places.filter((p) => p.images.length).length;
-  const withMap = places.filter((p) => p.mapUrl).length;
   console.log(`XLSX 행 수: ${rows.length}`);
   console.log(`JSON 장소 수: ${places.length} (이름 없어 제외: ${skippedNoName})`);
   console.log(`추천수 합계: ${places.reduce((s, p) => s + p.recommendations, 0)}`);
-  console.log(`지도 링크 보유: ${withMap}, 이미지 연결: ${withImages}`);
-  console.log(`출력: ${path.relative(root, outPath)}`);
+  console.log(`지도 링크 보유: ${places.filter((p) => p.mapUrl).length}, 이미지 연결: ${places.filter((p) => p.images.length).length}`);
+  console.log("--- 정리 보고 ---");
+  console.log(`이름 정리: ${report.renamed.length}건 ${report.renamed.map((r) => `[${r}]`).join(" ")}`);
+  console.log(`자동 문구 한줄설명 → 상세 첫 문단으로 대체 ${report.summaryReplaced}건, 비움 ${report.summaryCleared}건`);
+  console.log(`대표메뉴 중복 정리: ${report.menuCleaned}건`);
+  console.log(`확인한날 보정: ${report.dateFixed.length}건, 해석 불가: ${report.dateUnresolved.length}건`);
+  console.log(`교내 ${report.campusIn} / 교외 ${report.campusOut} / 구분 불가 ${report.campusUnknown}`);
+  console.log(`운영시간 해석: ${report.hoursParsed}곳 (해석 못 한 ${report.hoursUnparsed.length}곳은 '영업 중' 필터에서 제외)`);
+  console.log(`가격 구간 분류: ${report.pricesBanded}곳`);
+  if (process.argv.includes("--verbose")) {
+    console.log("\n해석하지 못한 운영시간:\n" + report.hoursUnparsed.join("\n"));
+    console.log("\n해석하지 못한 날짜:\n" + report.dateUnresolved.join("\n"));
+  }
 }
 
 main();

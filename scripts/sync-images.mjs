@@ -1,6 +1,7 @@
 // 원본 프로젝트의 사진을 장소와 연결해 public/images/places 로 복사(리사이즈)한다.
 // 사용법: npm run images [-- <이미지 폴더> ...]   이후 npm run data 로 places.json 에 반영
-// - 파일명이 '<장소 이름>_<번호>.<확장자>' 이고 이름이 XLSX의 장소 이름과 정확히 일치할 때만 연결한다.
+// - 파일명이 '<장소 이름>_<번호>.<확장자>'(번호가 없으면 1번) 이고 이름이 XLSX의 장소 이름과 정확히 일치할 때 연결한다.
+// - 이름이 다른 사진은 data/image-aliases.json 에 '사진 이름 → XLSX 이름'으로 확인한 것만 연결한다.
 // - 장소당 최대 2장. 원본 파일은 수정하지 않는다.
 import { createHash } from "node:crypto";
 import fs from "node:fs";
@@ -13,6 +14,7 @@ import { placeId } from "./place-id.mjs";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const xlsxPath = path.join(root, "data", "recommendations_normalized.xlsx");
 const imageMapPath = path.join(root, "data", "place-images.json");
+const aliasPath = path.join(root, "data", "image-aliases.json");
 const outDir = path.join(root, "public", "images", "places");
 
 const DRAFT = String.raw`F:\vibecoding\campus-place-recommender-draft`;
@@ -44,7 +46,7 @@ function parseImageName(file) {
   if (!IMAGE_EXT.test(stem)) return null;
   while (IMAGE_EXT.test(stem)) stem = stem.replace(IMAGE_EXT, "");
   const m = stem.match(/^(.+)_(\d)$/);
-  return m ? { name: m[1], index: Number(m[2]) } : null;
+  return m ? { name: m[1], index: Number(m[2]) } : { name: stem, index: 1 };
 }
 
 async function main() {
@@ -54,6 +56,12 @@ async function main() {
   for (const row of rows) {
     const name = String(row["이름"] ?? "").trim().normalize("NFC");
     if (name) placeByKey.set(nameKey(name), name);
+  }
+
+  const aliases = fs.existsSync(aliasPath) ? JSON.parse(fs.readFileSync(aliasPath, "utf8")) : {};
+  for (const [from, to] of Object.entries(aliases)) {
+    if (!placeByKey.has(nameKey(to))) throw new Error(`별칭 대상 장소가 없습니다: ${from} → ${to}`);
+    placeByKey.set(nameKey(from), placeByKey.get(nameKey(to)));
   }
 
   const candidates = new Map(); // 장소 이름 → [{ file, index, order, hash }]

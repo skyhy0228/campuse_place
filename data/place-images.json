@@ -1,4 +1,7 @@
 {
+  "999번 버스": [
+    "images/places/p870addbf-1.webp"
+  ],
   "가마치통닭 교통대점": [
     "images/places/p22a7e741-1.webp",
     "images/places/p22a7e741-2.webp"
@@ -6,6 +9,9 @@
   "관현각본점": [
     "images/places/p33feecf8-1.webp",
     "images/places/p33feecf8-2.webp"
+  ],
+  "교내 둘레길": [
+    "images/places/pd91be0f2-1.webp"
   ],
   "국대부대찌개 교통대점": [
     "images/places/pc6c02a5d-1.webp",
@@ -40,6 +46,12 @@
   "도란도락도시락 본점": [
     "images/places/pa9bcee38-1.webp",
     "images/places/pa9bcee38-2.webp"
+  ],
+  "두꺼비네": [
+    "images/places/p6d01ead0-1.webp"
+  ],
+  "드랍바이": [
+    "images/places/p05e05826-1.webp"
   ],
   "뚝딱김치찌개삼겹살": [
     "images/places/p5aa8c65a-1.webp",
@@ -95,6 +107,10 @@
   "성마루 국밥": [
     "images/places/pd0aaa42b-1.webp",
     "images/places/pd0aaa42b-2.webp"
+  ],
+  "쇼쿠스시 충주호암점": [
+    "images/places/pcbd156d9-1.webp",
+    "images/places/pcbd156d9-2.webp"
   ],
   "수리또 대소원점": [
     "images/places/pfbc7e187-1.webp",
@@ -162,6 +178,9 @@
     "images/places/pffc86ab0-1.webp",
     "images/places/pffc86ab0-2.webp"
   ],
+  "컴포즈커피": [
+    "images/places/pa138fbb7-1.webp"
+  ],
   "큰집아저씨 충주 본점": [
     "images/places/pd11bb1f7-1.webp",
     "images/places/pd11bb1f7-2.webp"
@@ -176,6 +195,9 @@
   "평정": [
     "images/places/p06376a02-1.webp",
     "images/places/p06376a02-2.webp"
+  ],
+  "한국교통대학교 충주캠퍼스주차장": [
+    "images/places/p0b6d6685-1.webp"
   ],
   "한솥도시락 충주교통대점": [
     "images/places/p43728edd-1.webp",

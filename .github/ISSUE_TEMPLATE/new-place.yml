@@ -1,0 +1,47 @@
+name: 새 장소·꿀팁 제보
+description: 목록에 없는 맛집, 숨은 장소, 생활 꿀팁을 알려주세요.
+title: "[새 장소] "
+labels: ["새 장소"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        제보 내용은 **공개**됩니다. 전화번호·실명 같은 개인정보는 적지 마세요.
+        접수된 내용은 `이슈.txt`에 자동으로 기록됩니다.
+  - type: input
+    id: name
+    attributes:
+      label: 이름
+      description: 장소 이름 또는 꿀팁 제목
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: 분류
+      options:
+        - 맛집
+        - 카페
+        - 숨은 장소
+        - 생활 꿀팁
+        - 교내 시설
+        - 기타
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: 위치
+      description: 주소 또는 건물 이름·층. 생활 꿀팁은 비워도 됩니다.
+  - type: input
+    id: map
+    attributes:
+      label: 네이버 지도 링크
+      description: 네이버 지도에서 장소를 찾아 공유 링크를 붙여넣으세요.
+  - type: textarea
+    id: content
+    attributes:
+      label: 설명
+      description: 추천하는 이유, 대표 메뉴와 가격, 운영시간, 알아두면 좋은 점
+    validations:
+      required: true

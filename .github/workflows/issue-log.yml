@@ -1,0 +1,57 @@
+name: Log issue to 이슈.txt
+
+# 이슈가 열리면 내용을 저장소 루트의 이슈.txt 에 덧붙여 커밋한다.
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+
+# 이슈가 동시에 열려도 한 번에 하나씩 기록한다.
+concurrency:
+  group: issue-log
+  cancel-in-progress: false
+
+jobs:
+  log:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      # 이슈 제목·본문은 신뢰할 수 없는 입력이라 스크립트에 직접 넣지 않고 환경 변수로만 전달한다.
+      - name: Append issue to 이슈.txt
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_USER: ${{ github.event.issue.user.login }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          ISSUE_CREATED: ${{ github.event.issue.created_at }}
+          ISSUE_LABELS: ${{ join(github.event.issue.labels.*.name, ', ') }}
+        run: node scripts/log-issue.mjs
+      - name: Commit and push
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- 이슈.txt
+          if git diff --cached --quiet; then
+            echo "변경 없음"
+            exit 0
+          fi
+          git commit -m "이슈 #${ISSUE_NUMBER} 접수 기록"
+          for attempt in 1 2 3 4 5; do
+            if git pull --rebase origin "$BRANCH" && git push origin "HEAD:$BRANCH"; then
+              exit 0
+            fi
+            sleep $((attempt * 3))
+          done
+          echo "push 에 실패했습니다" >&2
+          exit 1

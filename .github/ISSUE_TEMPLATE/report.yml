@@ -1,0 +1,42 @@
+name: 정보 수정 제보
+description: 장소 정보(운영시간·가격·위치 등)가 실제와 다르거나 빠져 있을 때 알려주세요.
+title: "[제보] "
+labels: ["제보"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        제보 내용은 **공개**됩니다. 전화번호·실명 같은 개인정보는 적지 마세요.
+        접수된 내용은 `이슈.txt`에 자동으로 기록됩니다.
+  - type: input
+    id: place
+    attributes:
+      label: 장소 이름
+      description: 사이트에 표시된 이름
+    validations:
+      required: true
+  - type: input
+    id: place_id
+    attributes:
+      label: 장소 ID
+      description: 사이트에서 자동으로 채워집니다. 수정하지 마세요.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 어떤 정보인가요?
+      options:
+        - 운영시간
+        - 가격·메뉴
+        - 위치·지도 링크
+        - 폐업·이전
+        - 사진
+        - 기타
+    validations:
+      required: true
+  - type: textarea
+    id: content
+    attributes:
+      label: 바른 정보 / 내용
+      description: 직접 확인한 내용을 적어주세요. 언제 확인했는지 함께 적으면 도움이 됩니다.
+    validations:
+      required: true

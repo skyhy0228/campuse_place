@@ -15,6 +15,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # 단위 테스트와 브라우저 테스트(Chrome)를 통과해야 배포된다.
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run test:unit
+      # 빌드하면서 data/recommendations_normalized.xlsx → public/data/places.json 을 다시 생성한다.
+      - run: npm run build
+      - run: npm run test:e2e
+
   build:
     runs-on: ubuntu-latest
     steps:
@@ -24,14 +39,13 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      # prebuild 단계에서 data/recommendations_normalized.xlsx → public/data/places.json 을 다시 생성한다.
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
   deploy:
-    needs: build
+    needs: [test, build]
     runs-on: ubuntu-latest
     environment:
       name: github-pages

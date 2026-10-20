@@ -5,6 +5,7 @@ import {
   Clock,
   Copy,
   ExternalLink,
+  Flag,
   MapPin,
   Share2,
   Star,
@@ -12,13 +13,17 @@ import {
   Utensils,
   X,
 } from "lucide-react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { reportUrl } from "../lib/report";
 import type { PlaceView } from "../lib/places";
+import { CollectionPicker } from "./CollectionPicker";
+import { Modal } from "./Modal";
 import { PlaceImage } from "./PlaceImage";
 
 interface Props {
   place: PlaceView;
   favorite: boolean;
+  open: boolean;
   onClose: () => void;
   onToggleFavorite: (id: string) => void;
 }
@@ -35,25 +40,17 @@ function Row({ icon, label, children }: { icon: ReactNode; label: string; childr
   );
 }
 
-export function PlaceDialog({ place, favorite, onClose, onToggleFavorite }: Props) {
-  const ref = useRef<HTMLDialogElement>(null);
-  // 렌더 시점(autoFocus 이전)의 포커스 위치를 기억했다가 닫을 때 되돌린다.
-  const opener = useRef<Element | null>(document.activeElement);
+export function PlaceDialog({ place, favorite, open, onClose, onToggleFavorite }: Props) {
   const [copied, setCopied] = useState(false);
 
-  // showModal은 포커스를 가두고 배경을 비활성화한다. 요소가 먼저 제거되므로 포커스 복원은 직접 한다.
+  // 상세를 보는 동안 탭 제목을 장소 이름으로 바꾼다.
   useEffect(() => {
-    const dialog = ref.current;
-    if (!dialog) return;
-    if (!dialog.open) dialog.showModal();
-    document.body.classList.add("modalOpen");
-    const previous = opener.current;
+    const previous = document.title;
+    document.title = `${place.name} · ${previous.split(" · ").at(-1)}`;
     return () => {
-      document.body.classList.remove("modalOpen");
-      if (dialog.open) dialog.close();
-      if (previous instanceof HTMLElement && previous.isConnected) previous.focus();
+      document.title = previous;
     };
-  }, []);
+  }, [place.name]);
 
   useEffect(() => setCopied(false), [place.id]);
 
@@ -79,23 +76,15 @@ export function PlaceDialog({ place, favorite, onClose, onToggleFavorite }: Prop
   };
 
   return (
-    <dialog
-      ref={ref}
-      className="dialog"
-      aria-labelledby="dialogTitle"
-      onCancel={(event) => {
-        // ESC는 브라우저 기본 닫기 대신 앱 상태(주소 해시 포함)를 통해 닫는다.
-        event.preventDefault();
-        onClose();
-      }}
-      onClick={(event) => {
-        if (event.target === ref.current) onClose();
-      }}
-    >
+    <Modal labelledBy="dialogTitle" onClose={onClose}>
       <div className="dialogBody" data-category={place.category}>
         <header className="dialogHead">
           <div className="dialogTitleWrap">
-            <span className="badge">{place.categoryLabel}</span>
+            <span className="badges">
+              <span className="badge">{place.categoryLabel}</span>
+              {open && <span className="badge open">영업 중</span>}
+              {place.isRecent && <span className="badge recent">최근 확인</span>}
+            </span>
             <h2 id="dialogTitle">{place.name}</h2>
           </div>
           <button type="button" className="iconButton" onClick={onClose} aria-label="상세 닫기" autoFocus>
@@ -116,7 +105,12 @@ export function PlaceDialog({ place, favorite, onClose, onToggleFavorite }: Prop
         <dl className="rows">
           {place.location && (
             <Row icon={<MapPin size={16} aria-hidden="true" />} label="위치">
-              {place.location}
+              <div>{place.location}</div>
+              {place.locationNotes.map((note) => (
+                <div key={note} className="rowNote">
+                  {note}
+                </div>
+              ))}
             </Row>
           )}
           {place.hoursItems.length > 0 && (
@@ -183,6 +177,7 @@ export function PlaceDialog({ place, favorite, onClose, onToggleFavorite }: Prop
             <Star size={16} aria-hidden="true" fill={favorite ? "currentColor" : "none"} />
             {favorite ? "즐겨찾기 해제" : "즐겨찾기"}
           </button>
+          <CollectionPicker placeId={place.id} placeName={place.name} />
           <button type="button" className="button" onClick={share}>
             {canNativeShare ? (
               <Share2 size={16} aria-hidden="true" />
@@ -193,11 +188,15 @@ export function PlaceDialog({ place, favorite, onClose, onToggleFavorite }: Prop
             )}
             {canNativeShare ? "공유" : copied ? "링크 복사됨" : "링크 복사"}
           </button>
+          <a className="button" href={reportUrl(place)} target="_blank" rel="noopener noreferrer" title="GitHub 이슈로 접수됩니다 (GitHub 계정 필요)">
+            <Flag size={16} aria-hidden="true" />
+            정보가 달라요
+          </a>
         </footer>
         <p className="srOnly" role="status" aria-live="polite">
           {copied ? "링크를 복사했습니다" : ""}
         </p>
       </div>
-    </dialog>
+    </Modal>
   );
 }

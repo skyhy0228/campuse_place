@@ -10,7 +10,6 @@
 - 통합 검색: 이름, 위치, 분류, 대표메뉴, 한줄설명, 자세한 설명을 한 번에 검색 (공백으로 나눈 단어는 모두 포함된 항목만 표시, 한글 입력 중에도 즉시 반영)
 - 분류 필터: 맛집 / 카페 / 교내 시설 / 숨은 장소 / 생활 꿀팁 / 관광지 / 자유 정보 (항목 수 표시)
 - 정렬: 추천수 높은 순, 이름순, 확인한날 최신순 (날짜가 없거나 해석할 수 없는 항목은 뒤로)
-- 지도 보기: 주소를 확인한 190곳을 카카오맵에 핀으로 표시 (분류별 색, 핀이 많으면 숫자로 묶음, 같은 좌표의 장소는 한 핀에서 목록으로 선택). 검색·분류·즐겨찾기 필터가 지도에도 그대로 적용됩니다.
 - 즐겨찾기: 브라우저 `localStorage`에 저장, 즐겨찾기만 보기
 - 상세 보기: 위치, 운영시간, 가격대, 대표메뉴, 설명, 사진, 네이버 지도 링크. ESC·닫기 버튼·뒤로 가기로 닫기, 주소 해시(`#place=<id>`)로 특정 항목 링크 공유
 - 공유: Web Share API를 지원하면 공유 시트, 아니면 링크 복사
@@ -34,7 +33,7 @@
 
 ## 기술 스택
 
-React 18, TypeScript, Vite 5, 일반 CSS, Lucide React, 카카오맵 JavaScript SDK, SheetJS(`xlsx`, 변환 스크립트 전용), sharp(이미지 리사이즈, 로컬 스크립트 전용), GitHub Actions + GitHub Pages
+React 18, TypeScript, Vite 5, 일반 CSS, Lucide React, SheetJS(`xlsx`, 변환 스크립트 전용), sharp(이미지 리사이즈, 로컬 스크립트 전용), GitHub Actions + GitHub Pages
 
 ## 설치와 실행
 
@@ -63,25 +62,6 @@ npm run data       # data/recommendations_normalized.xlsx → public/data/places
 1. 새 XLSX를 `data/recommendations_normalized.xlsx`로 교체 (시트 이름 `정규화데이터`, 컬럼 이름 유지)
 2. `npm run data`
 3. 변경된 `public/data/places.json`을 커밋하고 push
-
-## 지도(카카오맵) 설정
-
-`.env.example`을 `.env.local`로 복사해 키를 채웁니다 (`.env.local`은 커밋되지 않습니다).
-
-| 변수 | 용도 |
-|---|---|
-| `KAKAO_REST_KEY` | 주소 → 좌표 변환 스크립트 전용 비밀 값. 사이트에는 포함되지 않음 |
-| `VITE_KAKAO_MAP_JS_KEY` | 지도 표시용 JavaScript 키. 이 값이 없으면 지도 보기 버튼이 숨겨짐 |
-
-- 카카오 개발자 콘솔에서 **카카오맵 사용 설정을 ON**으로 하고, JavaScript SDK 도메인에 `http://localhost:5173`, `https://skyhy0228.github.io`를 등록해야 합니다.
-- GitHub Pages 배포에는 저장소 Settings → Secrets and variables → Actions → **Variables**에 `VITE_KAKAO_MAP_JS_KEY`를 추가합니다.
-
-```powershell
-npm run geocode   # 주소 → 좌표 변환 (data/place-coordinates.json). 이미 변환된 항목은 건너뜀
-npm run data      # places.json 에 좌표 반영
-```
-
-- 건물 이름·층수만 있거나 설명문인 위치(48곳)는 주소가 아니므로 변환하지 않고, 사유는 `data/place-coordinates-unresolved.json`에 기록합니다. 좌표를 추측해서 넣지 않습니다.
 
 ## 이미지 갱신
 
@@ -114,9 +94,7 @@ campuse_place/
 ├─ .github/workflows/deploy.yml   Pages 배포 워크플로
 ├─ data/
 │  ├─ recommendations_normalized.xlsx   기준 데이터 (원본 보존)
-│  ├─ place-images.json                 장소 이름 → 이미지 경로
-│  ├─ place-coordinates.json            장소 이름 → 좌표 (카카오 주소 검색 결과)
-│  └─ place-coordinates-unresolved.json 좌표를 만들지 않은 항목과 사유
+│  └─ place-images.json                 장소 이름 → 이미지 경로
 ├─ public/
 │  ├─ data/places.json                  변환 결과 (사이트가 불러옴)
 │  ├─ images/places/                    웹용 사진
@@ -124,10 +102,9 @@ campuse_place/
 ├─ scripts/
 │  ├─ convert-data.mjs                  XLSX → JSON
 │  ├─ sync-images.mjs                   사진 연결·리사이즈
-│  ├─ geocode.mjs, load-env.mjs         주소 → 좌표 변환
 │  └─ place-id.mjs                      이름 기반 항목 ID
 └─ src/
    ├─ App.tsx, main.tsx, styles.css, types.ts
-   ├─ components/                       PlaceCard, PlaceDialog, PlaceImage, PlaceMap
-   └─ lib/                              places(검색·정렬·분류), favorites, kakao(SDK 로더)
+   ├─ components/                       PlaceCard, PlaceDialog, PlaceImage
+   └─ lib/                              places(검색·정렬·분류), favorites
 ```

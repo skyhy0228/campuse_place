@@ -1,10 +1,8 @@
-import { List, Map as MapIcon, MapPin, RotateCcw, Search, SearchX, Star, TriangleAlert, X } from "lucide-react";
+import { MapPin, RotateCcw, Search, SearchX, Star, TriangleAlert, X } from "lucide-react";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { PlaceCard } from "./components/PlaceCard";
 import { PlaceDialog } from "./components/PlaceDialog";
-import { PlaceMap } from "./components/PlaceMap";
 import { useFavorites } from "./lib/favorites";
-import { mapEnabled } from "./lib/kakao";
 import { buildCategories, loadPlaces, matchesQuery, sortPlaces, type PlaceView } from "./lib/places";
 import type { SortKey } from "./types";
 
@@ -29,7 +27,6 @@ export default function App() {
   const [category, setCategory] = useState("");
   const [sort, setSort] = useState<SortKey>(DEFAULT_SORT);
   const [onlyFavorites, setOnlyFavorites] = useState(false);
-  const [view, setView] = useState<"list" | "map">("list");
   const [selectedId, setSelectedId] = useState<string | null>(parseHash);
   const { favoriteIds, toggle } = useFavorites();
   const deferredQuery = useDeferredValue(query);
@@ -84,8 +81,6 @@ export default function App() {
     return sortPlaces(filtered, sort);
   }, [places, category, onlyFavorites, favoriteIds, deferredQuery, sort]);
 
-  const hasCoordinates = Boolean(places?.some((p) => p.lat !== undefined && p.lng !== undefined));
-  const showMap = mapEnabled && hasCoordinates && view === "map";
   const selected = places?.find((place) => place.id === selectedId) ?? null;
   const filtersActive = Boolean(query || category || onlyFavorites || sort !== DEFAULT_SORT);
   const favoriteCount = places ? places.filter((p) => favoriteIds.has(p.id)).length : 0;
@@ -160,18 +155,6 @@ export default function App() {
                 검색 결과 <strong>{visible.length}</strong>개
               </p>
               <div className="toolActions">
-                {mapEnabled && hasCoordinates && (
-                  <div className="viewToggle" role="group" aria-label="보기 방식">
-                    <button type="button" aria-pressed={view === "list"} onClick={() => setView("list")}>
-                      <List size={15} aria-hidden="true" />
-                      목록
-                    </button>
-                    <button type="button" aria-pressed={view === "map"} onClick={() => setView("map")}>
-                      <MapIcon size={15} aria-hidden="true" />
-                      지도
-                    </button>
-                  </div>
-                )}
                 <button
                   type="button"
                   className={`button small${onlyFavorites ? " active" : ""}`}
@@ -229,11 +212,7 @@ export default function App() {
           </div>
         )}
 
-        {showMap && (
-          <PlaceMap places={visible} favoriteIds={favoriteIds} onOpen={openPlace} onToggleFavorite={toggle} />
-        )}
-
-        {!showMap && visible.length > 0 && (
+        {visible.length > 0 && (
           <ul className="grid">
             {visible.map((place) => (
               <li key={place.id}>

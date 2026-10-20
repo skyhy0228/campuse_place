@@ -15,7 +15,9 @@
       "recommendations": 1,
       "checkedAt": "2026-09-28",
       "checkedSort": "2026-09-28",
-      "images": []
+      "images": [],
+      "lat": 37.0062938904248,
+      "lng": 127.873263570512
     },
     {
       "id": "p80107d1c",
@@ -31,7 +33,9 @@
       "recommendations": 1,
       "checkedAt": "2025-03-20",
       "checkedSort": "2025-03-20",
-      "images": []
+      "images": [],
+      "lat": 36.9797482049899,
+      "lng": 127.905259471861
     },
     {
       "id": "p029b217e",
@@ -47,7 +51,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "pd612cbec",
@@ -127,7 +133,9 @@
       "recommendations": 3,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p0ceb8a77",
@@ -143,7 +151,9 @@
       "recommendations": 3,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p2d3b8d40",
@@ -223,7 +233,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "pd42659a8",
@@ -271,7 +283,9 @@
       "recommendations": 5,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p10781498",
@@ -351,7 +365,9 @@
       "recommendations": 2,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9631203587139,
+      "lng": 127.869456849513
     },
     {
       "id": "p8068b29c",
@@ -431,7 +447,9 @@
       "recommendations": 3,
       "checkedAt": "2026-10-07",
       "checkedSort": "2026-10-07",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p910991b9",
@@ -447,7 +465,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "pcbea68bc",
@@ -495,7 +515,9 @@
       "recommendations": 2,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "pc2030de9",
@@ -578,7 +600,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p8f1e57d9",
@@ -594,7 +618,9 @@
       "recommendations": 2,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "pd40cfe9b",
@@ -658,7 +684,9 @@
       "recommendations": 1,
       "checkedAt": "",
       "checkedSort": "",
-      "images": []
+      "images": [],
+      "lat": 36.9632263563874,
+      "lng": 127.870362415565
     },
     {
       "id": "pc17cda81",
@@ -674,7 +702,9 @@
       "recommendations": 2,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9647830796065,
+      "lng": 127.871485177635
     },
     {
       "id": "pc7be8a1c",
@@ -818,7 +848,9 @@
       "recommendations": 2,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p246a3fe9",
@@ -866,7 +898,9 @@
       "recommendations": 2,
       "checkedAt": "2026-09-24",
       "checkedSort": "2026-09-24",
-      "images": []
+      "images": [],
+      "lat": 36.9644320123074,
+      "lng": 127.871388986675
     },
     {
       "id": "pb1079d7c",
@@ -898,7 +932,9 @@
       "recommendations": 3,
       "checkedAt": "2026-10-07",
       "checkedSort": "2026-10-07",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p4c59c8e3",
@@ -930,7 +966,9 @@
       "recommendations": 2,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p9700e337",
@@ -962,7 +1000,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-07",
       "checkedSort": "2026-10-07",
-      "images": []
+      "images": [],
+      "lat": 36.9815232777626,
+      "lng": 127.914348036478
     },
     {
       "id": "pbc48a953",
@@ -978,7 +1018,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "pa94814dc",
@@ -1026,7 +1068,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p296dc824",
@@ -1218,7 +1262,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p452a6351",
@@ -1234,7 +1280,9 @@
       "recommendations": 5,
       "checkedAt": "2026-10-07",
       "checkedSort": "2026-10-07",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "pdbd3f9dc",
@@ -1266,7 +1314,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9640909936881,
+      "lng": 127.872157756408
     },
     {
       "id": "p650b76bd",
@@ -1314,7 +1364,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10",
       "checkedSort": "2026-10-01",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "pabdf73d6",
@@ -1378,7 +1430,9 @@
       "recommendations": 3,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p0382bb3a",
@@ -1394,7 +1448,9 @@
       "recommendations": 3,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p074cc010",
@@ -1410,7 +1466,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p804c3db8",
@@ -1426,7 +1484,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p0ba87fc6",
@@ -1442,7 +1502,9 @@
       "recommendations": 3,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "pa288a095",
@@ -1522,7 +1584,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9426272489914,
+      "lng": 127.901163783693
     },
     {
       "id": "p14d2d741",
@@ -1538,7 +1602,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p0724d812",
@@ -1586,7 +1652,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10",
       "checkedSort": "2026-10-01",
-      "images": []
+      "images": [],
+      "lat": 36.9768777539318,
+      "lng": 127.885590836141
     },
     {
       "id": "p632ce8e7",
@@ -1618,7 +1686,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9586926546532,
+      "lng": 127.870758698201
     },
     {
       "id": "p836f7040",
@@ -1634,7 +1704,9 @@
       "recommendations": 3,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9705047942538,
+      "lng": 127.873031167556
     },
     {
       "id": "pa76443f3",
@@ -1650,7 +1722,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "pf6e84fc6",
@@ -1666,7 +1740,9 @@
       "recommendations": 1,
       "checkedAt": "",
       "checkedSort": "",
-      "images": []
+      "images": [],
+      "lat": 36.9844058691918,
+      "lng": 127.893697268662
     },
     {
       "id": "pcd6f2816",
@@ -1684,7 +1760,9 @@
       "checkedSort": "2026-10-06",
       "images": [
         "images/places/pcd6f2816-1.webp"
-      ]
+      ],
+      "lat": 36.9673231899093,
+      "lng": 127.875572071069
     },
     {
       "id": "pefa77c5d",
@@ -1718,7 +1796,9 @@
       "checkedSort": "2026-10-06",
       "images": [
         "images/places/p081be0c7-1.webp"
-      ]
+      ],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p223df67c",
@@ -1798,7 +1878,9 @@
       "recommendations": 1,
       "checkedAt": "2026-03-19",
       "checkedSort": "2026-03-19",
-      "images": []
+      "images": [],
+      "lat": 37.029286435503,
+      "lng": 127.856752588213
     },
     {
       "id": "p8e0e8c8a",
@@ -1814,7 +1896,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9754796791434,
+      "lng": 127.885747360086
     },
     {
       "id": "p710929b5",
@@ -1830,7 +1914,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p6859e3a5",
@@ -1846,7 +1932,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p02e2bb06",
@@ -1862,7 +1950,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10",
       "checkedSort": "2026-10-01",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p57715ec1",
@@ -1878,7 +1968,9 @@
       "recommendations": 2,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p99b8cc44",
@@ -1912,7 +2004,9 @@
       "checkedSort": "2026-10-06",
       "images": [
         "images/places/pa0c0fec0-1.webp"
-      ]
+      ],
+      "lat": 36.964952444667,
+      "lng": 127.876435263833
     },
     {
       "id": "p5a2314b7",
@@ -1944,7 +2038,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p094e974d",
@@ -1960,7 +2056,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.8934928779189,
+      "lng": 127.917179574882
     },
     {
       "id": "pfa898bf6",
@@ -1992,7 +2090,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "pd3c48f98",
@@ -2008,7 +2108,9 @@
       "recommendations": 1,
       "checkedAt": "2026-02",
       "checkedSort": "2026-02-01",
-      "images": []
+      "images": [],
+      "lat": 36.8411210112837,
+      "lng": 128.016225215323
     },
     {
       "id": "p2a7d9196",
@@ -2024,7 +2126,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p2687e5c1",
@@ -2040,7 +2144,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p869e53c1",
@@ -2056,7 +2162,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9653513903437,
+      "lng": 127.871016780388
     },
     {
       "id": "p7cc7792a",
@@ -2074,7 +2182,9 @@
       "checkedSort": "2026-10-06",
       "images": [
         "images/places/p7cc7792a-1.webp"
-      ]
+      ],
+      "lat": 36.9680660992674,
+      "lng": 127.876367650216
     },
     {
       "id": "pf9b9a9ef",
@@ -2090,7 +2200,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-07",
       "checkedSort": "2026-10-07",
-      "images": []
+      "images": [],
+      "lat": 36.9638546469526,
+      "lng": 127.870696663034
     },
     {
       "id": "pdd334006",
@@ -2106,7 +2218,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p76c21fba",
@@ -2138,7 +2252,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p419f11a5",
@@ -2154,7 +2270,9 @@
       "recommendations": 1,
       "checkedAt": "2026-08",
       "checkedSort": "2026-08-01",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p71147a5b",
@@ -2170,7 +2288,9 @@
       "recommendations": 1,
       "checkedAt": "2026-08",
       "checkedSort": "2026-08-01",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p41ea0fa2",
@@ -2234,7 +2354,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "pe987a4e4",
@@ -2282,7 +2404,9 @@
       "recommendations": 2,
       "checkedAt": "2026-10-07",
       "checkedSort": "2026-10-07",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "pb264e366",
@@ -2298,7 +2422,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "pa8bca974",
@@ -2314,7 +2440,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p7dcd4bfe",
@@ -2330,7 +2458,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "pabb4f772",
@@ -2346,7 +2476,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p61d4ba1c",
@@ -2378,7 +2510,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9699166895596,
+      "lng": 127.875268592615
     },
     {
       "id": "p8ce403be",
@@ -2394,7 +2528,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9583213794517,
+      "lng": 127.915810085971
     },
     {
       "id": "p515c5c15",
@@ -2412,7 +2548,9 @@
       "checkedSort": "2026-10-07",
       "images": [
         "images/places/p515c5c15-1.webp"
-      ]
+      ],
+      "lat": 36.9731170364206,
+      "lng": 127.878249565313
     },
     {
       "id": "pbf3034a3",
@@ -2444,7 +2582,9 @@
       "recommendations": 3,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p95274c87",
@@ -2462,7 +2602,9 @@
       "checkedSort": "2026-10-06",
       "images": [
         "images/places/p95274c87-1.webp"
-      ]
+      ],
+      "lat": 37.0014001955733,
+      "lng": 127.897349238957
     },
     {
       "id": "p3ef97106",
@@ -2478,7 +2620,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9769721545323,
+      "lng": 127.905943553677
     },
     {
       "id": "pfb0d0a8b",
@@ -2510,7 +2654,9 @@
       "recommendations": 4,
       "checkedAt": "2026-10-07",
       "checkedSort": "2026-10-07",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p5ff4a90b",
@@ -2542,7 +2688,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "pcf3a0886",
@@ -2558,7 +2706,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p0a6ad65a",
@@ -2574,7 +2724,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "pd516eb57",
@@ -2590,7 +2742,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "pe6e66fe5",
@@ -2606,7 +2760,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p0b6d6685",
@@ -2622,7 +2778,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-07",
       "checkedSort": "2026-10-07",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p1a122cd9",
@@ -2638,7 +2796,9 @@
       "recommendations": 1,
       "checkedAt": "2026-05-25",
       "checkedSort": "2026-05-25",
-      "images": []
+      "images": [],
+      "lat": 36.9722534060176,
+      "lng": 128.025614450715
     },
     {
       "id": "p40ee5fb6",
@@ -2654,7 +2814,9 @@
       "recommendations": 3,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9642544236135,
+      "lng": 127.923702811779
     },
     {
       "id": "pe7582070",
@@ -2670,7 +2832,9 @@
       "recommendations": 3,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "p5182842c",
@@ -2686,7 +2850,9 @@
       "recommendations": 1,
       "checkedAt": "2026-04-26",
       "checkedSort": "2026-04-26",
-      "images": []
+      "images": [],
+      "lat": 36.9821163956101,
+      "lng": 127.916982283296
     },
     {
       "id": "p9d89fdee",
@@ -2702,7 +2868,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9634675325336,
+      "lng": 127.871129277431
     },
     {
       "id": "p22a7e741",
@@ -2721,7 +2889,9 @@
       "images": [
         "images/places/p22a7e741-1.webp",
         "images/places/p22a7e741-2.webp"
-      ]
+      ],
+      "lat": 36.9647554882791,
+      "lng": 127.870886023852
     },
     {
       "id": "p33feecf8",
@@ -2740,7 +2910,9 @@
       "images": [
         "images/places/p33feecf8-1.webp",
         "images/places/p33feecf8-2.webp"
-      ]
+      ],
+      "lat": 36.9623425635638,
+      "lng": 127.882052197969
     },
     {
       "id": "pc6c02a5d",
@@ -2759,7 +2931,9 @@
       "images": [
         "images/places/pc6c02a5d-1.webp",
         "images/places/pc6c02a5d-2.webp"
-      ]
+      ],
+      "lat": 36.9645442180893,
+      "lng": 127.87072248244
     },
     {
       "id": "p0eaf057e",
@@ -2778,7 +2952,9 @@
       "images": [
         "images/places/p0eaf057e-1.webp",
         "images/places/p0eaf057e-2.webp"
-      ]
+      ],
+      "lat": 36.9634275687661,
+      "lng": 127.871307583683
     },
     {
       "id": "p67a6b013",
@@ -2797,7 +2973,9 @@
       "images": [
         "images/places/p67a6b013-1.webp",
         "images/places/p67a6b013-2.webp"
-      ]
+      ],
+      "lat": 36.9806954512018,
+      "lng": 127.927696003117
     },
     {
       "id": "pa656e0d5",
@@ -2816,7 +2994,9 @@
       "images": [
         "images/places/pa656e0d5-1.webp",
         "images/places/pa656e0d5-2.webp"
-      ]
+      ],
+      "lat": 36.9689676334037,
+      "lng": 127.931054451562
     },
     {
       "id": "pc630b906",
@@ -2832,7 +3012,9 @@
       "recommendations": 2,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9631989632135,
+      "lng": 127.871541791969
     },
     {
       "id": "p8bfc6ccb",
@@ -2848,7 +3030,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9645442180893,
+      "lng": 127.87072248244
     },
     {
       "id": "p1221d2da",
@@ -2867,7 +3051,9 @@
       "images": [
         "images/places/p1221d2da-1.webp",
         "images/places/p1221d2da-2.webp"
-      ]
+      ],
+      "lat": 36.9650738188775,
+      "lng": 127.870887853384
     },
     {
       "id": "pd21659ef",
@@ -2883,7 +3069,9 @@
       "recommendations": 3,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "pa9bcee38",
@@ -2902,7 +3090,9 @@
       "images": [
         "images/places/pa9bcee38-1.webp",
         "images/places/pa9bcee38-2.webp"
-      ]
+      ],
+      "lat": 36.9635755613754,
+      "lng": 127.871339138739
     },
     {
       "id": "p6d01ead0",
@@ -2918,7 +3108,9 @@
       "recommendations": 2,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9647554882791,
+      "lng": 127.870886023852
     },
     {
       "id": "p0ed316ab",
@@ -2934,7 +3126,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9585291745712,
+      "lng": 127.924378514041
     },
     {
       "id": "p05e05826",
@@ -2950,7 +3144,9 @@
       "recommendations": 2,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9652325331606,
+      "lng": 127.871778998789
     },
     {
       "id": "p5aa8c65a",
@@ -2969,7 +3165,9 @@
       "images": [
         "images/places/p5aa8c65a-1.webp",
         "images/places/p5aa8c65a-2.webp"
-      ]
+      ],
+      "lat": 36.9890483234882,
+      "lng": 127.927853264683
     },
     {
       "id": "p9bfc0fa4",
@@ -2988,7 +3186,9 @@
       "images": [
         "images/places/p9bfc0fa4-1.webp",
         "images/places/p9bfc0fa4-2.webp"
-      ]
+      ],
+      "lat": 36.9638518953248,
+      "lng": 127.871231459707
     },
     {
       "id": "p4df21334",
@@ -3007,7 +3207,9 @@
       "images": [
         "images/places/p4df21334-1.webp",
         "images/places/p4df21334-2.webp"
-      ]
+      ],
+      "lat": 36.9652325331606,
+      "lng": 127.871778998789
     },
     {
       "id": "pb582a4cc",
@@ -3023,7 +3225,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9652826211875,
+      "lng": 127.871535001993
     },
     {
       "id": "p8a24ef44",
@@ -3039,7 +3243,9 @@
       "recommendations": 1,
       "checkedAt": "2026-09-28",
       "checkedSort": "2026-09-28",
-      "images": []
+      "images": [],
+      "lat": 36.9768458850436,
+      "lng": 127.936783615437
     },
     {
       "id": "p779323ec",
@@ -3058,7 +3264,9 @@
       "images": [
         "images/places/p779323ec-1.webp",
         "images/places/p779323ec-2.webp"
-      ]
+      ],
+      "lat": 36.9648827327844,
+      "lng": 127.860565250597
     },
     {
       "id": "pc0632ae7",
@@ -3077,7 +3285,9 @@
       "images": [
         "images/places/pc0632ae7-1.webp",
         "images/places/pc0632ae7-2.webp"
-      ]
+      ],
+      "lat": 37.0175914141272,
+      "lng": 127.864321447212
     },
     {
       "id": "p6859eb19",
@@ -3093,7 +3303,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-01",
       "checkedSort": "2026-10-01",
-      "images": []
+      "images": [],
+      "lat": 36.9811703557735,
+      "lng": 127.918943035266
     },
     {
       "id": "p49320663",
@@ -3109,7 +3321,9 @@
       "recommendations": 1,
       "checkedAt": "26-10-06",
       "checkedSort": "",
-      "images": []
+      "images": [],
+      "lat": 36.9647554882791,
+      "lng": 127.870886023852
     },
     {
       "id": "pb8490c41",
@@ -3128,7 +3342,9 @@
       "images": [
         "images/places/pb8490c41-1.webp",
         "images/places/pb8490c41-2.webp"
-      ]
+      ],
+      "lat": 36.9561737288532,
+      "lng": 127.934484997476
     },
     {
       "id": "pf256f2fb",
@@ -3144,7 +3360,9 @@
       "recommendations": 2,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9634675325336,
+      "lng": 127.871129277431
     },
     {
       "id": "p1a4331d9",
@@ -3160,7 +3378,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9649094162634,
+      "lng": 127.870870035512
     },
     {
       "id": "pfef35807",
@@ -3176,7 +3396,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-07",
       "checkedSort": "2026-10-07",
-      "images": []
+      "images": [],
+      "lat": 36.9644320123074,
+      "lng": 127.871388986675
     },
     {
       "id": "pb50bb119",
@@ -3192,7 +3414,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.97395509672,
+      "lng": 127.923122082309
     },
     {
       "id": "p385748cc",
@@ -3211,7 +3435,9 @@
       "images": [
         "images/places/p385748cc-1.webp",
         "images/places/p385748cc-2.webp"
-      ]
+      ],
+      "lat": 36.9650738188775,
+      "lng": 127.870887853384
     },
     {
       "id": "pd8dc816f",
@@ -3230,7 +3456,9 @@
       "images": [
         "images/places/pd8dc816f-1.webp",
         "images/places/pd8dc816f-2.webp"
-      ]
+      ],
+      "lat": 36.9640890775413,
+      "lng": 127.870773780021
     },
     {
       "id": "pc4648548",
@@ -3246,7 +3474,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9588096701367,
+      "lng": 127.845794180372
     },
     {
       "id": "p933f55f1",
@@ -3262,7 +3492,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-07",
       "checkedSort": "2026-10-07",
-      "images": []
+      "images": [],
+      "lat": 36.9644320123074,
+      "lng": 127.871388986675
     },
     {
       "id": "pd0993074",
@@ -3278,7 +3510,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9638518953248,
+      "lng": 127.871231459707
     },
     {
       "id": "pa7a59cbd",
@@ -3294,7 +3528,9 @@
       "recommendations": 2,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9647742305304,
+      "lng": 127.870541958008
     },
     {
       "id": "pb3ecdd79",
@@ -3313,7 +3549,9 @@
       "images": [
         "images/places/pb3ecdd79-1.webp",
         "images/places/pb3ecdd79-2.webp"
-      ]
+      ],
+      "lat": 36.9638546469526,
+      "lng": 127.870696663034
     },
     {
       "id": "p11e37220",
@@ -3332,7 +3570,9 @@
       "images": [
         "images/places/p11e37220-1.webp",
         "images/places/p11e37220-2.webp"
-      ]
+      ],
+      "lat": 36.9700598229684,
+      "lng": 127.932899650189
     },
     {
       "id": "p19831cb2",
@@ -3348,7 +3588,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9664269435559,
+      "lng": 127.875347216515
     },
     {
       "id": "pd0aaa42b",
@@ -3367,7 +3609,9 @@
       "images": [
         "images/places/pd0aaa42b-1.webp",
         "images/places/pd0aaa42b-2.webp"
-      ]
+      ],
+      "lat": 36.9645443624069,
+      "lng": 127.842806380874
     },
     {
       "id": "p11677ba6",
@@ -3383,7 +3627,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9500688036683,
+      "lng": 127.904130433273
     },
     {
       "id": "p6f0c410e",
@@ -3399,7 +3645,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9762073202383,
+      "lng": 127.939928543578
     },
     {
       "id": "pcbd156d9",
@@ -3415,7 +3663,9 @@
       "recommendations": 2,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9537074960607,
+      "lng": 127.933952219177
     },
     {
       "id": "pfbc7e187",
@@ -3434,7 +3684,9 @@
       "images": [
         "images/places/pfbc7e187-1.webp",
         "images/places/pfbc7e187-2.webp"
-      ]
+      ],
+      "lat": 36.9636061563733,
+      "lng": 127.870632299516
     },
     {
       "id": "p22eb4dab",
@@ -3453,7 +3705,9 @@
       "images": [
         "images/places/p22eb4dab-1.webp",
         "images/places/p22eb4dab-2.webp"
-      ]
+      ],
+      "lat": 36.9668517760979,
+      "lng": 127.93800335691
     },
     {
       "id": "p92654f0e",
@@ -3469,7 +3723,9 @@
       "recommendations": 2,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9652274042447,
+      "lng": 127.870918573763
     },
     {
       "id": "pdf41a6d2",
@@ -3485,7 +3741,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9640890775413,
+      "lng": 127.870773780021
     },
     {
       "id": "p2d2a0ff4",
@@ -3501,7 +3759,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-07",
       "checkedSort": "2026-10-07",
-      "images": []
+      "images": [],
+      "lat": 36.9649094162634,
+      "lng": 127.870870035512
     },
     {
       "id": "p300b5b05",
@@ -3520,7 +3780,9 @@
       "images": [
         "images/places/p300b5b05-1.webp",
         "images/places/p300b5b05-2.webp"
-      ]
+      ],
+      "lat": 36.9704045564069,
+      "lng": 127.935282984791
     },
     {
       "id": "p8db6288c",
@@ -3539,7 +3801,9 @@
       "images": [
         "images/places/p8db6288c-1.webp",
         "images/places/p8db6288c-2.webp"
-      ]
+      ],
+      "lat": 36.9648827327844,
+      "lng": 127.860565250597
     },
     {
       "id": "pe34934c2",
@@ -3555,7 +3819,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.973723104947,
+      "lng": 127.933214337749
     },
     {
       "id": "p640604be",
@@ -3574,7 +3840,9 @@
       "images": [
         "images/places/p640604be-1.webp",
         "images/places/p640604be-2.webp"
-      ]
+      ],
+      "lat": 36.9697525525459,
+      "lng": 127.935912063099
     },
     {
       "id": "p18b6b3e4",
@@ -3593,7 +3861,9 @@
       "images": [
         "images/places/p18b6b3e4-1.webp",
         "images/places/p18b6b3e4-2.webp"
-      ]
+      ],
+      "lat": 36.9653942552562,
+      "lng": 127.851116152871
     },
     {
       "id": "p989b2491",
@@ -3612,7 +3882,9 @@
       "images": [
         "images/places/p989b2491-1.webp",
         "images/places/p989b2491-2.webp"
-      ]
+      ],
+      "lat": 36.9734239530015,
+      "lng": 127.932641315938
     },
     {
       "id": "pc42e5683",
@@ -3628,7 +3900,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9694837818511,
+      "lng": 127.932061855523
     },
     {
       "id": "p2e25bb74",
@@ -3644,7 +3918,9 @@
       "recommendations": 1,
       "checkedAt": "2026-09-16",
       "checkedSort": "2026-09-16",
-      "images": []
+      "images": [],
+      "lat": 36.9740485276032,
+      "lng": 127.798008216206
     },
     {
       "id": "pbd6a66c6",
@@ -3663,7 +3939,9 @@
       "images": [
         "images/places/pbd6a66c6-1.webp",
         "images/places/pbd6a66c6-2.webp"
-      ]
+      ],
+      "lat": 36.9565265634394,
+      "lng": 127.92281645139
     },
     {
       "id": "p78fa8766",
@@ -3679,7 +3957,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9426098265305,
+      "lng": 127.919167730282
     },
     {
       "id": "p34d8af41",
@@ -3698,7 +3978,9 @@
       "images": [
         "images/places/p34d8af41-1.webp",
         "images/places/p34d8af41-2.webp"
-      ]
+      ],
+      "lat": 36.9638518953248,
+      "lng": 127.871231459707
     },
     {
       "id": "p57e7b401",
@@ -3717,7 +3999,9 @@
       "images": [
         "images/places/p57e7b401-1.webp",
         "images/places/p57e7b401-2.webp"
-      ]
+      ],
+      "lat": 36.9652826211875,
+      "lng": 127.871535001993
     },
     {
       "id": "p45bae824",
@@ -3733,7 +4017,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9847765424897,
+      "lng": 127.909090481991
     },
     {
       "id": "pc8172250",
@@ -3752,7 +4038,9 @@
       "images": [
         "images/places/pc8172250-1.webp",
         "images/places/pc8172250-2.webp"
-      ]
+      ],
+      "lat": 36.9881095079939,
+      "lng": 127.922188856594
     },
     {
       "id": "pc01fa7ea",
@@ -3768,7 +4056,9 @@
       "recommendations": 3,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9632100086206,
+      "lng": 127.871239977839
     },
     {
       "id": "pad9525bc",
@@ -3784,7 +4074,9 @@
       "recommendations": 3,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9884353528533,
+      "lng": 127.930073534772
     },
     {
       "id": "p4a219231",
@@ -3800,7 +4092,9 @@
       "recommendations": 2,
       "checkedAt": "2026-10-07",
       "checkedSort": "2026-10-07",
-      "images": []
+      "images": [],
+      "lat": 36.9652274042447,
+      "lng": 127.870918573763
     },
     {
       "id": "p4f2471c4",
@@ -3816,7 +4110,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9613259044755,
+      "lng": 127.870526051713
     },
     {
       "id": "p4480500e",
@@ -3832,7 +4128,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9528880377831,
+      "lng": 127.930203349717
     },
     {
       "id": "pa5f566fc",
@@ -3848,7 +4146,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9645872945867,
+      "lng": 127.871421748321
     },
     {
       "id": "p60231b50",
@@ -3867,7 +4167,9 @@
       "images": [
         "images/places/p60231b50-1.webp",
         "images/places/p60231b50-2.webp"
-      ]
+      ],
+      "lat": 36.9658310249998,
+      "lng": 127.932104456928
     },
     {
       "id": "p61a2f8ff",
@@ -3883,7 +4185,9 @@
       "recommendations": 1,
       "checkedAt": "2026-09-10",
       "checkedSort": "2026-09-10",
-      "images": []
+      "images": [],
+      "lat": 36.9857973884946,
+      "lng": 127.828622533105
     },
     {
       "id": "p8b89ab6a",
@@ -3899,7 +4203,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9653378438267,
+      "lng": 127.851418484359
     },
     {
       "id": "p0a874aa2",
@@ -3915,7 +4221,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.990569624756,
+      "lng": 127.929527442347
     },
     {
       "id": "p8122f028",
@@ -3950,7 +4258,9 @@
       "images": [
         "images/places/pd11bb1f7-1.webp",
         "images/places/pd11bb1f7-2.webp"
-      ]
+      ],
+      "lat": 36.9653378438267,
+      "lng": 127.851418484359
     },
     {
       "id": "p8c335bf1",
@@ -3966,7 +4276,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9633680024136,
+      "lng": 127.870657434859
     },
     {
       "id": "p8923549c",
@@ -3982,7 +4294,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9858534676524,
+      "lng": 127.899880131504
     },
     {
       "id": "p0a3a2374",
@@ -3998,7 +4312,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9638518953248,
+      "lng": 127.871231459707
     },
     {
       "id": "p577b17f4",
@@ -4017,7 +4333,9 @@
       "images": [
         "images/places/p577b17f4-1.webp",
         "images/places/p577b17f4-2.webp"
-      ]
+      ],
+      "lat": 36.9828072809835,
+      "lng": 127.942198308993
     },
     {
       "id": "pf3f2bcdc",
@@ -4033,7 +4351,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10",
       "checkedSort": "2026-10-01",
-      "images": []
+      "images": [],
+      "lat": 36.9632263563874,
+      "lng": 127.870362415565
     },
     {
       "id": "p06376a02",
@@ -4052,7 +4372,9 @@
       "images": [
         "images/places/p06376a02-1.webp",
         "images/places/p06376a02-2.webp"
-      ]
+      ],
+      "lat": 36.9690218286217,
+      "lng": 127.93265632788
     },
     {
       "id": "p43728edd",
@@ -4071,7 +4393,9 @@
       "images": [
         "images/places/p43728edd-1.webp",
         "images/places/p43728edd-2.webp"
-      ]
+      ],
+      "lat": 36.9649094162634,
+      "lng": 127.870870035512
     },
     {
       "id": "p17bb25f2",
@@ -4090,7 +4414,9 @@
       "images": [
         "images/places/p17bb25f2-1.webp",
         "images/places/p17bb25f2-2.webp"
-      ]
+      ],
+      "lat": 36.9632100086206,
+      "lng": 127.871239977839
     },
     {
       "id": "p726db252",
@@ -4106,7 +4432,9 @@
       "recommendations": 1,
       "checkedAt": "2026-09-03",
       "checkedSort": "2026-09-03",
-      "images": []
+      "images": [],
+      "lat": 37.0038342695992,
+      "lng": 127.817804859238
     },
     {
       "id": "p5f96f7d4",
@@ -4122,7 +4450,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-05",
       "checkedSort": "2026-10-05",
-      "images": []
+      "images": [],
+      "lat": 36.9557981016358,
+      "lng": 127.934493543869
     },
     {
       "id": "p6c12c5e4",
@@ -4234,7 +4564,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "pd9a67e48",
@@ -4266,7 +4598,9 @@
       "recommendations": 1,
       "checkedAt": "2021-12-21",
       "checkedSort": "2021-12-21",
-      "images": []
+      "images": [],
+      "lat": 36.9683123728468,
+      "lng": 127.877573372878
     },
     {
       "id": "p9bd604a5",
@@ -4394,7 +4728,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9866284917685,
+      "lng": 127.922658788137
     },
     {
       "id": "p12ab2db1",
@@ -4458,7 +4794,9 @@
       "recommendations": 1,
       "checkedAt": "2025-12-26",
       "checkedSort": "2025-12-26",
-      "images": []
+      "images": [],
+      "lat": 36.975061726381,
+      "lng": 127.87253888079
     },
     {
       "id": "p2d5675ff",
@@ -4474,7 +4812,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9053897150321,
+      "lng": 127.964612737336
     },
     {
       "id": "p5ef108b8",
@@ -4506,7 +4846,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9614816203079,
+      "lng": 127.898156089973
     },
     {
       "id": "pd526b457",
@@ -4730,7 +5072,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 37.015868300345,
+      "lng": 127.866611697251
     },
     {
       "id": "pd3f06d8a",
@@ -4778,7 +5122,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9815232777626,
+      "lng": 127.914348036478
     },
     {
       "id": "p4bf97e72",
@@ -4874,7 +5220,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     },
     {
       "id": "pcdd6ad19",
@@ -4906,7 +5254,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9810190418348,
+      "lng": 127.927958251413
     },
     {
       "id": "p09207b2e",
@@ -4925,7 +5275,9 @@
       "images": [
         "images/places/p09207b2e-1.webp",
         "images/places/p09207b2e-2.webp"
-      ]
+      ],
+      "lat": 37.0120142415012,
+      "lng": 127.916994974095
     },
     {
       "id": "p43c8f6aa",
@@ -4941,7 +5293,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9642888281392,
+      "lng": 127.873645929332
     },
     {
       "id": "p0b82c5ba",
@@ -4960,7 +5314,9 @@
       "images": [
         "images/places/p0b82c5ba-1.webp",
         "images/places/p0b82c5ba-2.webp"
-      ]
+      ],
+      "lat": 36.9649057762365,
+      "lng": 127.871415272358
     },
     {
       "id": "pb5bb4ea0",
@@ -4976,7 +5332,9 @@
       "recommendations": 2,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9636334402395,
+      "lng": 127.871175296831
     },
     {
       "id": "p1706f51d",
@@ -4992,7 +5350,9 @@
       "recommendations": 2,
       "checkedAt": "26-10-06",
       "checkedSort": "",
-      "images": []
+      "images": [],
+      "lat": 36.9832577561754,
+      "lng": 127.941750444842
     },
     {
       "id": "p3b1c6d3c",
@@ -5008,7 +5368,9 @@
       "recommendations": 1,
       "checkedAt": "26-10-06",
       "checkedSort": "",
-      "images": []
+      "images": [],
+      "lat": 36.9645442180893,
+      "lng": 127.87072248244
     },
     {
       "id": "p5e65b9ef",
@@ -5027,7 +5389,9 @@
       "images": [
         "images/places/p5e65b9ef-1.webp",
         "images/places/p5e65b9ef-2.webp"
-      ]
+      ],
+      "lat": 36.9811026881421,
+      "lng": 127.928945374681
     },
     {
       "id": "p625994b4",
@@ -5046,7 +5410,9 @@
       "images": [
         "images/places/p625994b4-1.webp",
         "images/places/p625994b4-2.webp"
-      ]
+      ],
+      "lat": 36.9792564849574,
+      "lng": 127.917992447572
     },
     {
       "id": "pffc86ab0",
@@ -5065,7 +5431,9 @@
       "images": [
         "images/places/pffc86ab0-1.webp",
         "images/places/pffc86ab0-2.webp"
-      ]
+      ],
+      "lat": 36.9655223699293,
+      "lng": 127.92974271612
     },
     {
       "id": "p8f144537",
@@ -5129,7 +5497,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-07",
       "checkedSort": "2026-10-07",
-      "images": []
+      "images": [],
+      "lat": 36.9424730064921,
+      "lng": 127.912161070015
     },
     {
       "id": "paf89a898",
@@ -5145,7 +5515,9 @@
       "recommendations": 1,
       "checkedAt": "26-10-06",
       "checkedSort": "",
-      "images": []
+      "images": [],
+      "lat": 36.9734767375976,
+      "lng": 127.936375203814
     },
     {
       "id": "pa138fbb7",
@@ -5161,7 +5533,9 @@
       "recommendations": 1,
       "checkedAt": "",
       "checkedSort": "",
-      "images": []
+      "images": [],
+      "lat": 36.9653513903437,
+      "lng": 127.871016780388
     },
     {
       "id": "p5b7d3e79",
@@ -5177,7 +5551,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-05",
       "checkedSort": "2026-10-05",
-      "images": []
+      "images": [],
+      "lat": 36.9826545148,
+      "lng": 127.91765724238
     },
     {
       "id": "pe233537f",
@@ -5193,7 +5569,9 @@
       "recommendations": 1,
       "checkedAt": "2026-09-18",
       "checkedSort": "2026-09-18",
-      "images": []
+      "images": [],
+      "lat": 36.9705047942538,
+      "lng": 127.873031167556
     },
     {
       "id": "pbde7678f",
@@ -5209,7 +5587,9 @@
       "recommendations": 1,
       "checkedAt": "2026-10-06",
       "checkedSort": "2026-10-06",
-      "images": []
+      "images": [],
+      "lat": 36.9688337176742,
+      "lng": 127.872807142994
     }
   ]
 }

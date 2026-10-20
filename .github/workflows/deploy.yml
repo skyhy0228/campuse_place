@@ -26,6 +26,10 @@ jobs:
       - run: npm ci
       # prebuild 단계에서 data/recommendations_normalized.xlsx → public/data/places.json 을 다시 생성한다.
       - run: npm run build
+        env:
+          # 저장소 Settings → Secrets and variables → Actions → Variables 에 등록한다.
+          # 도메인으로 제한되는 공개용 키이며, 없으면 지도 보기 버튼이 숨겨진다.
+          VITE_KAKAO_MAP_JS_KEY: ${{ vars.VITE_KAKAO_MAP_JS_KEY }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

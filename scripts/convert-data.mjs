@@ -10,6 +10,7 @@ import { placeId } from "./place-id.mjs";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const xlsxPath = path.join(root, "data", "recommendations_normalized.xlsx");
 const imageMapPath = path.join(root, "data", "place-images.json");
+const coordsPath = path.join(root, "data", "place-coordinates.json");
 const outDir = path.join(root, "public", "data");
 const outPath = path.join(outDir, "places.json");
 const SHEET = "정규화데이터";
@@ -107,6 +108,7 @@ function main() {
   if (missingColumns.length) throw new Error(`누락된 컬럼: ${missingColumns.join(", ")}`);
 
   const imageMap = fs.existsSync(imageMapPath) ? JSON.parse(fs.readFileSync(imageMapPath, "utf8")) : {};
+  const coordMap = fs.existsSync(coordsPath) ? JSON.parse(fs.readFileSync(coordsPath, "utf8")) : {};
 
   const places = [];
   const seen = new Set();
@@ -122,6 +124,8 @@ function main() {
     seen.add(id);
 
     const checked = parseChecked(row[COLUMNS.checked]);
+    const coord = coordMap[name.normalize("NFC")];
+    const hasCoord = Number.isFinite(coord?.lat) && Number.isFinite(coord?.lng);
     places.push({
       id,
       name,
@@ -137,6 +141,7 @@ function main() {
       checkedAt: checked.display,
       checkedSort: checked.sort,
       images: imageMap[name.normalize("NFC")] ?? [],
+      ...(hasCoord ? { lat: coord.lat, lng: coord.lng } : {}),
     });
   }
 
@@ -150,7 +155,7 @@ function main() {
   console.log(`XLSX 행 수: ${rows.length}`);
   console.log(`JSON 장소 수: ${places.length} (이름 없어 제외: ${skippedNoName})`);
   console.log(`추천수 합계: ${places.reduce((s, p) => s + p.recommendations, 0)}`);
-  console.log(`지도 링크 보유: ${withMap}, 이미지 연결: ${withImages}`);
+  console.log(`지도 링크 보유: ${withMap}, 이미지 연결: ${withImages}, 좌표 보유: ${places.filter((p) => p.lat !== undefined).length}`);
   console.log(`출력: ${path.relative(root, outPath)}`);
 }
 

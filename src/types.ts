@@ -24,6 +24,9 @@ export interface Place {
   checkedAt: string;
   checkedSort: string;
   images: string[];
+  // 주소로 위치가 특정되는 항목에만 있다 (data/place-coordinates.json).
+  lat?: number;
+  lng?: number;
 }
 
 export interface PlacesFile {

@@ -24,10 +24,54 @@ export const launchBrowser = () =>
     headless: true,
   });
 
+// 네이버 지도 API 대신 쓰는 가짜 스크립트. 실제 키·네트워크 없이 핀 구성과 화면 동작을 확인한다.
+// 지도는 컨테이너 안의 .fakeMap 으로, 핀은 aria-label 이 붙은 .fakeMarker 버튼으로 그린다.
+export const FAKE_NAVER_MAPS = `(() => {
+  const Event = {
+    addListener(target, name, fn) { const l = { target, name, fn }; (target.__listeners ??= []).push(l); return l; },
+    removeListener(l) { l.target.__listeners = (l.target.__listeners || []).filter((x) => x !== l); },
+    trigger(target, name) { (target.__listeners || []).filter((l) => l.name === name).forEach((l) => l.fn()); },
+  };
+  class LatLng { constructor(lat, lng) { this.lat = lat; this.lng = lng; } }
+  class LatLngBounds { constructor(sw, ne) { this.sw = sw; this.ne = ne; } }
+  class Point { constructor(x, y) { this.x = x; this.y = y; } }
+  class Size { constructor(w, h) { this.width = w; this.height = h; } }
+  class Map {
+    constructor(container, options) {
+      this.el = document.createElement("div");
+      this.el.className = "fakeMap";
+      this.el.style.cssText = "position:absolute;inset:0";
+      this.el.addEventListener("click", () => Event.trigger(this, "click"));
+      container.appendChild(this.el);
+      this.center = options.center;
+      this.zoom = options.zoom;
+    }
+    setCenter(c) { this.center = c; }
+    setZoom(z) { this.zoom = z; }
+    fitBounds(b) { this.bounds = b; }
+    autoResize() {}
+    destroy() { this.el.remove(); }
+  }
+  class Marker {
+    constructor(o) {
+      this.el = document.createElement("button");
+      this.el.type = "button";
+      this.el.className = "fakeMarker";
+      this.el.setAttribute("aria-label", o.title);
+      this.el.addEventListener("click", (e) => { e.stopPropagation(); Event.trigger(this, "click"); });
+      this.setMap(o.map);
+    }
+    setMap(map) { this.el.remove(); if (map) map.el.appendChild(this.el); }
+  }
+  window.naver = { maps: { Map, Marker, LatLng, LatLngBounds, Point, Size, Event, Position: { TOP_RIGHT: 3 } } };
+})();`;
+export const NAVER_MAPS_URL = /^https:\/\/oapi\.map\.naver\.com\//;
+
 // 새 브라우저 컨텍스트에서 테스트 본문을 실행하고, 끝나면 콘솔 오류가 없었는지 확인한다.
 export async function withPage(browser, fn, options = {}) {
   const { viewport = { width: 1440, height: 900 }, url = "", serviceWorkers = "block", checkErrors = true, clock, ...rest } = options;
   const context = await browser.newContext({ viewport, locale: "ko-KR", serviceWorkers, permissions: ["clipboard-read", "clipboard-write"], ...rest });
+  await context.route(NAVER_MAPS_URL, (route) => route.fulfill({ contentType: "text/javascript", body: FAKE_NAVER_MAPS }));
   const page = await context.newPage();
   const errors = [];
   page.on("console", (message) => message.type() === "error" && errors.push(message.text()));

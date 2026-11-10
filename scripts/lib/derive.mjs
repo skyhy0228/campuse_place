@@ -127,6 +127,18 @@ export function classifyCampus(location, notes = []) {
   return "";
 }
 
+// ---------- 좌표 ----------
+// 주소를 변환한 좌표 중 장소가 특정되는 것만 지도 핀으로 쓴다.
+// 학교 대표 주소(대학로 50)는 건물·호실과 상관없이 캠퍼스 한 점으로 바뀌므로 핀을 만들지 않는다.
+export function pickCoordinate(coord) {
+  const lat = Number(coord?.lat);
+  const lng = Number(coord?.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  if (lat < 33 || lat > 39 || lng < 124 || lng > 132) return null;
+  if (CAMPUS_ADDRESS.test(String(coord.matched ?? ""))) return null;
+  return { lat: Math.round(lat * 1e7) / 1e7, lng: Math.round(lng * 1e7) / 1e7 };
+}
+
 // ---------- 가격 ----------
 // 표기된 가격 중 가장 낮은 금액으로 구간을 나눈다. 숫자가 없으면 '무료'만 따로 인식한다.
 export function parsePrice(price) {

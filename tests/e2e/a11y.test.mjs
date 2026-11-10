@@ -69,6 +69,15 @@ describe("접근성(axe-core)", () => {
           await scan(page, `상세 ${scheme}`);
         }, options));
 
+      test("지도 보기와 핀 묶음 안내", (t) =>
+        run(async (page) => {
+          if (!(await page.locator(".viewToggle").count())) return t.skip("지도 키 없이 빌드된 dist 입니다.");
+          await page.getByRole("button", { name: "지도", exact: true }).click();
+          await page.locator(".fakeMarker[aria-label$='곳']").first().click();
+          await page.getByRole("region", { name: "선택한 위치의 장소" }).waitFor();
+          await scan(page, `지도 ${scheme}`);
+        }, options));
+
       test("로그인·회원가입·비밀번호 찾기 화면", () =>
         run(async (page) => {
           await page.locator(".headerActions .account").click();

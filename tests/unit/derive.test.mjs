@@ -8,9 +8,21 @@ import {
   parseChecked,
   parseHours,
   parsePrice,
+  pickCoordinate,
   priceBand,
   splitLocation,
 } from "../../scripts/lib/derive.mjs";
+
+test("pickCoordinate: 장소가 특정되는 좌표만 쓰고 학교 대표 주소는 제외한다", () => {
+  assert.deepEqual(pickCoordinate({ lat: 36.9647554882791, lng: 127.870886023852, matched: "충북 충주시 대소원면 대학로 19" }), {
+    lat: 36.9647555,
+    lng: 127.870886,
+  });
+  assert.equal(pickCoordinate({ lat: 36.9688, lng: 127.8728, matched: "충북 충주시 대소원면 대학로 50" }), null);
+  assert.ok(pickCoordinate({ lat: 36.96, lng: 127.87, matched: "충북 충주시 대소원면 대학로 500" }));
+  assert.equal(pickCoordinate({ lat: 0, lng: 0, matched: "" }), null);
+  assert.equal(pickCoordinate(undefined), null);
+});
 
 test("cleanName: 폴더명 접두어와 밑줄을 정리한다", () => {
   assert.equal(cleanName("3_생활꿀팁_동아리 신청"), "동아리 신청");

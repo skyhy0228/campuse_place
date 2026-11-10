@@ -14,11 +14,13 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
+import { isLocated, mapEnabled } from "../lib/naverMap";
 import { reportUrl } from "../lib/report";
 import type { PlaceView } from "../lib/places";
 import { CollectionPicker } from "./CollectionPicker";
 import { Modal } from "./Modal";
 import { PlaceImage } from "./PlaceImage";
+import { PlaceMiniMap } from "./PlaceMiniMap";
 
 interface Props {
   place: PlaceView;
@@ -145,6 +147,8 @@ export function PlaceDialog({ place, favorite, open, onClose, onToggleFavorite }
             </Row>
           )}
         </dl>
+
+        {mapEnabled && isLocated(place) && <PlaceMiniMap place={place} />}
 
         {place.detailItems.length > 0 && (
           <section className="detailText" aria-label="자세한 설명">

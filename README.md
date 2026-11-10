@@ -17,6 +17,7 @@
 **보기**
 - 상세 보기: 위치(주소와 부가 설명 분리), 운영시간, 가격대, 대표메뉴, 설명, 사진, 네이버 지도 링크. ESC·닫기 버튼·뒤로 가기로 닫기, `#place=<id>` 주소로 공유
 - 맛집·카페 카드는 메뉴·가격 중심, 꿀팁·장소 카드는 설명 중심으로 표시
+- **지도 보기**(네이버 지도): 목록/지도 전환, 주소로 위치가 특정된 133곳에 분류 색 핀 표시. 같은 건물에 있는 곳은 숫자 핀 하나로 묶고, 누르면 목록이 열림. 검색·필터 결과가 그대로 지도에 반영되고 `?view=map`으로 공유 가능. 상세 보기에도 해당 장소의 작은 지도 표시 (지도 키가 없으면 지도 기능은 숨겨짐)
 - 밝은/어두운 화면 (기기 설정을 따르거나 직접 선택), 모바일에서 분류 칩을 한 줄로 넘겨 보기
 
 **내 목록 (로그인)**
@@ -50,11 +51,12 @@
 | 위치 | `주소 \| 부가 설명`을 주소와 설명으로 분리, `없음`은 비움 |
 | 교내/교외 | 위치 문자열만으로 판단(대학로 50·교내·건물 이름 → 교내, 그 외 주소 → 교외). 근거가 없으면 분류하지 않음 |
 | 가격 구간 | 표기된 금액 중 최저가 기준 (`무료`, 1만원 미만, 1~2만원, 2만원 이상) |
+| 지도 좌표 | `data/place-coordinates.json`(원본 이름 → 주소를 변환한 좌표)에서 가져옴. 학교 대표 주소(대학로 50)로만 변환된 57곳은 건물·호실을 구분할 수 없어 **핀을 만들지 않음** |
 | 운영시간 | **요일과 시간이 모두 명확한 경우만** 해석해 '지금 영업 중'에 사용(브레이크타임·휴무 요일 포함). 애매하면(요일 없음, `확인 필요`, `영업안하는 날도있음` 등) 판단하지 않음 |
 
 ## 기술 스택
 
-React 18, TypeScript, Vite 5, 일반 CSS, Lucide React, SheetJS(`xlsx`, 변환 스크립트 전용), sharp(이미지·아이콘 생성 스크립트 전용), Playwright(`playwright-core`)와 axe-core(테스트), GitHub Actions + GitHub Pages
+React 18, TypeScript, Vite 5, 일반 CSS, Lucide React, 네이버 지도 JavaScript API v3, SheetJS(`xlsx`, 변환 스크립트 전용), sharp(이미지·아이콘 생성 스크립트 전용), Playwright(`playwright-core`)와 axe-core(테스트), GitHub Actions + GitHub Pages
 
 ## 설치와 실행
 
@@ -68,16 +70,26 @@ npm run preview      # 빌드 결과 미리보기 (http://localhost:4173/campuse
 npm run typecheck    # 타입 검사만
 ```
 
+### 네이버 지도 키
+
+지도는 [네이버 클라우드 플랫폼](https://console.ncloud.com) Maps의 **Client ID**가 있어야 표시됩니다. 키가 없으면 지도 버튼과 상세의 지도만 숨겨지고 나머지는 그대로 동작합니다.
+
+1. 콘솔 → Maps → Application 등록에서 **Dynamic Map**을 선택합니다.
+2. Web 서비스 URL에 `https://skyhy0228.github.io`와 개발용 `http://localhost:5173`, `http://localhost:4173`을 등록합니다. 등록하지 않은 주소에서는 "인증에 실패했습니다" 안내가 나옵니다.
+3. 로컬: `.env.example`을 `.env.local`로 복사해 `VITE_NAVER_MAP_CLIENT_ID`를 채웁니다 (`.env.local`은 커밋하지 않음).
+4. 배포: 저장소 Settings → Secrets and variables → Actions → **Variables**에 `VITE_NAVER_MAP_CLIENT_ID`를 등록합니다. 등록한 주소에서만 동작하는 공개용 값이라 빌드 결과에 포함됩니다.
+
 ## 테스트
 
 ```powershell
-npm run test:unit    # 데이터 정리 규칙, 운영시간 해석, 이슈 기록 스크립트
-npm run build
-npm run test:e2e     # 브라우저 테스트(Chrome): 검색·필터·상세·계정·접근성(axe)·PWA
+npm run test:unit    # 데이터 정리 규칙, 운영시간 해석, 좌표 선별, 이슈 기록 스크립트
+npm run build:e2e    # 테스트용 빌드 (가짜 지도 키 .env.e2e 사용)
+npm run test:e2e     # 브라우저 테스트(Chrome): 검색·필터·상세·지도·계정·접근성(axe)·PWA
 npm test             # 위 세 가지를 차례로
 ```
 
 - 브라우저 테스트는 `dist`를 Vite preview로 띄워 설치된 Chrome으로 접속합니다. 다른 Chrome 경로는 `E2E_CHROME_PATH`, 포트는 `E2E_PORT`로 바꿉니다.
+- 네이버 지도 스크립트는 테스트에서 가짜 스크립트(`tests/e2e/helpers.mjs`)로 바꿔 끼워, 실제 키·네트워크 없이 핀 구성과 화면 동작을 확인합니다. 그래서 실제 지도 그림은 테스트하지 않습니다. 지도 키 없이 빌드한 `dist`에서는 지도 테스트가 건너뛰어집니다.
 - 접근성 테스트는 axe-core(WCAG 2.1 A/AA + 모범 사례, 색 대비 포함)를 밝은/어두운 화면의 주요 화면에 실행합니다.
 - GitHub Actions는 `main`에 push할 때마다 테스트를 통과해야 배포합니다.
 
@@ -138,6 +150,7 @@ campuse_place/
 ├─ data/
 │  ├─ recommendations_normalized.xlsx   기준 데이터 (원본 보존)
 │  ├─ place-images.json                 장소 이름 → 이미지 경로
+│  ├─ place-coordinates.json            장소 이름 → 주소를 변환한 좌표
 │  └─ image-aliases.json                확인된 사진 이름 별칭
 ├─ public/
 │  ├─ data/places.json                  변환 결과 (사이트가 불러옴)
@@ -149,9 +162,9 @@ campuse_place/
 │  ├─ sync-images.mjs, make-assets.mjs, log-issue.mjs, place-id.mjs
 ├─ src/
 │  ├─ App.tsx, main.tsx, styles.css, types.ts, config.ts
-│  ├─ components/   PlaceCard, PlaceDialog, PopularStrip, AuthDialog, AccountDialog, CollectionPicker, ThemeToggle, Modal, PlaceImage
-│  └─ lib/          places(검색·필터·정렬), hours, choseong, urlState, auth, userData, session, theme, report
+│  ├─ components/   PlaceCard, PlaceDialog, PlaceMap, PlaceMiniMap, PopularStrip, AuthDialog, AccountDialog, CollectionPicker, ThemeToggle, Modal, PlaceImage
+│  └─ lib/          places(검색·필터·정렬), naverMap·useNaverMap(지도), hours, choseong, urlState, auth, userData, session, theme, report
 └─ tests/
    ├─ unit/         derive, log-issue
-   └─ e2e/          site, auth, a11y, pwa (+ helpers)
+   └─ e2e/          site, map, auth, a11y, pwa (+ helpers: 가짜 지도 스크립트)
 ```

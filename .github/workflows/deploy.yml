@@ -27,7 +27,8 @@ jobs:
       - run: npm ci
       - run: npm run test:unit
       # 빌드하면서 data/recommendations_normalized.xlsx → public/data/places.json 을 다시 생성한다.
-      - run: npm run build
+      # 테스트용 빌드는 가짜 지도 키(.env.e2e)를 쓰고, 테스트가 네이버 지도 스크립트를 가짜로 바꿔 끼운다.
+      - run: npm run build:e2e
       - run: npm run test:e2e
 
   build:
@@ -40,6 +41,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+        env:
+          # 저장소 Settings → Secrets and variables → Actions → Variables 에 등록한다.
+          # 네이버 지도 Client ID 는 등록한 사이트 주소에서만 동작하는 공개용 값이며, 없으면 지도 기능이 숨겨진다.
+          VITE_NAVER_MAP_CLIENT_ID: ${{ vars.VITE_NAVER_MAP_CLIENT_ID }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

@@ -1,16 +1,18 @@
-import { ListFilter, MapPin, RotateCcw, Search, SearchX, Star, TriangleAlert, UserRound, X } from "lucide-react";
+import { List, ListFilter, Map as MapIcon, MapPin, RotateCcw, Search, SearchX, Star, TriangleAlert, UserRound, X } from "lucide-react";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { AccountDialog } from "./components/AccountDialog";
 import { AuthDialog } from "./components/AuthDialog";
 import { PlaceCard } from "./components/PlaceCard";
 import { PlaceDialog } from "./components/PlaceDialog";
+import { PlaceMap } from "./components/PlaceMap";
 import { PopularStrip } from "./components/PopularStrip";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { openStatus } from "./lib/hours";
+import { isLocated, mapEnabled } from "./lib/naverMap";
 import { buildCategories, filterPlaces, loadPlaces, type PlaceView } from "./lib/places";
 import { newPlaceUrl } from "./lib/report";
 import { SessionProvider, useSession } from "./lib/session";
-import { filtersFromSearch, filtersToSearch } from "./lib/urlState";
+import { filtersFromSearch, filtersToSearch, viewFromSearch, type View } from "./lib/urlState";
 import { DEFAULT_FILTERS, type Campus, type Filters, type PriceBand, type SortKey } from "./types";
 
 type LoadState = { status: "loading" } | { status: "error"; message: string } | { status: "ready"; places: PlaceView[] };
@@ -49,6 +51,7 @@ function Main() {
     const f = filtersFromSearch(location.search);
     return f.openNow || Boolean(f.campus) || Boolean(f.price);
   });
+  const [view, setView] = useState<View>(() => viewFromSearch(location.search));
   const [selectedId, setSelectedId] = useState<string | null>(parseHash);
   const [now, setNow] = useState(() => new Date());
   const deferredQuery = useDeferredValue(filters.query);
@@ -75,11 +78,11 @@ function Main() {
   // 검색·필터 상태를 주소에 반영해 같은 화면을 링크로 공유할 수 있게 한다.
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      const search = filtersToSearch(filters);
+      const search = filtersToSearch(filters, view);
       if (search !== location.search) history.replaceState(history.state, "", location.pathname + search + location.hash);
     }, 300);
     return () => window.clearTimeout(timer);
-  }, [filters]);
+  }, [filters, view]);
 
   useEffect(() => {
     const sync = () => setSelectedId(parseHash());
@@ -136,6 +139,9 @@ function Main() {
         : [],
     [places],
   );
+  // 키가 있고 좌표가 있는 장소가 하나라도 있을 때만 지도 보기를 제공한다.
+  const canShowMap = mapEnabled && Boolean(places?.some(isLocated));
+  const showMap = canShowMap && view === "map";
   const selected = places?.find((place) => place.id === selectedId) ?? null;
   const favoriteCount = places ? places.filter((p) => favoriteIds.has(p.id)).length : 0;
   const openableCount = places ? places.filter((p) => openStatus(p.schedule, now) !== "unknown").length : 0;
@@ -221,6 +227,18 @@ function Main() {
                 검색 결과 <strong>{visible.length}</strong>개
               </p>
               <div className="toolActions">
+                {canShowMap && (
+                  <div className="segmented viewToggle" role="group" aria-label="보기 방식">
+                    <button type="button" aria-pressed={!showMap} onClick={() => setView("list")}>
+                      <List size={15} aria-hidden="true" />
+                      목록
+                    </button>
+                    <button type="button" aria-pressed={showMap} onClick={() => setView("map")}>
+                      <MapIcon size={15} aria-hidden="true" />
+                      지도
+                    </button>
+                  </div>
+                )}
                 <button
                   type="button"
                   className={`button small${filters.list === "fav" ? " active" : ""}`}
@@ -303,7 +321,7 @@ function Main() {
           </section>
         )}
 
-        {places && !filtersActive && <PopularStrip places={popular} onOpen={openPlace} />}
+        {places && !filtersActive && !showMap && <PopularStrip places={popular} onOpen={openPlace} />}
 
         {state.status === "loading" && (
           <p className="notice" role="status">
@@ -338,7 +356,17 @@ function Main() {
           </div>
         )}
 
-        {visible.length > 0 && (
+        {showMap && visible.length > 0 && (
+          <PlaceMap
+            places={visible}
+            favoriteIds={favoriteIds}
+            onOpen={openPlace}
+            onToggleFavorite={session.toggleFavorite}
+            onShowList={() => setView("list")}
+          />
+        )}
+
+        {!showMap && visible.length > 0 && (
           <>
             <h2 className={filtersActive ? "srOnly" : "listTitle"}>{filtersActive ? "검색 결과" : "전체 장소"}</h2>
             <ul className="grid">

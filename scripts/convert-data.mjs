@@ -15,6 +15,7 @@ import {
   parseChecked,
   parseHours,
   parsePrice,
+  pickCoordinate,
   priceBand,
   splitLocation,
   text,
@@ -24,6 +25,7 @@ import { placeId } from "./place-id.mjs";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const xlsxPath = path.join(root, "data", "recommendations_normalized.xlsx");
 const imageMapPath = path.join(root, "data", "place-images.json");
+const coordsPath = path.join(root, "data", "place-coordinates.json");
 const outDir = path.join(root, "public", "data");
 const outPath = path.join(outDir, "places.json");
 const SHEET = "정규화데이터";
@@ -80,6 +82,8 @@ function main() {
   if (missingColumns.length) throw new Error(`누락된 컬럼: ${missingColumns.join(", ")}`);
 
   const imageMap = fs.existsSync(imageMapPath) ? JSON.parse(fs.readFileSync(imageMapPath, "utf8")) : {};
+  // 원본 이름 → 좌표. 주소를 좌표로 변환해 둔 결과이며, 핀으로 쓸 수 있는 것만 places.json 에 넣는다.
+  const coordMap = fs.existsSync(coordsPath) ? JSON.parse(fs.readFileSync(coordsPath, "utf8")) : {};
   const allNames = new Set(rows.map((r) => text(r[COLUMNS.name])));
 
   const report = {
@@ -95,6 +99,8 @@ function main() {
     campusIn: 0,
     campusOut: 0,
     campusUnknown: 0,
+    pinned: 0,
+    coordSkipped: 0,
   };
 
   const places = [];
@@ -151,6 +157,11 @@ function main() {
       else report.hoursUnparsed.push(`${originalName}: ${hours.slice(0, 60)}`);
     }
 
+    const rawCoord = coordMap[originalName.normalize("NFC")];
+    const coord = rawCoord ? pickCoordinate(rawCoord) : null;
+    if (coord) report.pinned += 1;
+    else if (rawCoord) report.coordSkipped += 1;
+
     const price = text(row[COLUMNS.price]);
     const { priceMin, free } = parsePrice(price);
     const band = priceBand(priceMin, free);
@@ -175,6 +186,7 @@ function main() {
       checkedAt: checked.display,
       checkedSort: checked.sort,
       images: imageMap[originalName.normalize("NFC")] ?? [],
+      ...(coord ?? {}),
     });
   }
 
@@ -195,6 +207,7 @@ function main() {
   console.log(`교내 ${report.campusIn} / 교외 ${report.campusOut} / 구분 불가 ${report.campusUnknown}`);
   console.log(`운영시간 해석: ${report.hoursParsed}곳 (해석 못 한 ${report.hoursUnparsed.length}곳은 '영업 중' 필터에서 제외)`);
   console.log(`가격 구간 분류: ${report.pricesBanded}곳`);
+  console.log(`지도 핀: ${report.pinned}곳 (좌표가 학교 대표 주소뿐이라 제외 ${report.coordSkipped}곳)`);
   if (process.argv.includes("--verbose")) {
     console.log("\n해석하지 못한 운영시간:\n" + report.hoursUnparsed.join("\n"));
     console.log("\n해석하지 못한 날짜:\n" + report.dateUnresolved.join("\n"));

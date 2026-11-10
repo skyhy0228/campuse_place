@@ -10,12 +10,13 @@
     "data:all": "npm run images && npm run data",
     "prebuild": "npm run data",
     "build": "tsc --noEmit && vite build",
+    "build:e2e": "npm run data && tsc --noEmit && vite build --mode e2e",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "assets": "node scripts/make-assets.mjs",
     "test:unit": "node --test tests/unit",
     "test:e2e": "node --test --test-concurrency=1 tests/e2e",
-    "test": "npm run test:unit && npm run build && npm run test:e2e"
+    "test": "npm run test:unit && npm run build:e2e && npm run test:e2e"
   },
   "dependencies": {
     "lucide-react": "^1.60.0",

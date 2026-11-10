@@ -2,6 +2,8 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import { applyTheme, getTheme } from "./lib/theme";
+// Pretendard 가변 글꼴(필요한 글자만 나눠 받는 dynamic subset). 저장소 안에서 함께 배포되어 CDN 이 필요 없다.
+import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import "./styles.css";
 
 applyTheme(getTheme());

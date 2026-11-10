@@ -1,66 +1,134 @@
 # 교통대 꿀팁 모음
 
-국립한국교통대학교 충주캠퍼스 학생들이 직접 모은 맛집, 숨은 장소, 생활 꿀팁, 자유 정보를 검색하고 열람하는 정적 웹사이트입니다. 랜딩 페이지 없이 첫 화면에서 바로 목록과 검색을 쓸 수 있습니다.
+국립한국교통대학교 충주캠퍼스 학생들이 직접 모은 맛집, 숨은 장소, 생활 꿀팁, 자유 정보를 검색하고 열람하는 웹사이트입니다. 랜딩 페이지 없이 첫 화면에서 바로 목록과 검색을 쓸 수 있습니다.
+
+화면은 GitHub Pages(정적 사이트)에서 제공합니다. 회원·즐겨찾기 동기화·후기·제보는 **Supabase**를 백엔드로 씁니다. Supabase 키가 없으면 이 기능들은 이전처럼 브라우저 안에서만 동작합니다 (localStorage 계정, GitHub 이슈 제보).
 
 - 배포 주소: https://skyhy0228.github.io/campuse_place/
 - 저장소: https://github.com/skyhy0228/campuse_place
 
+## 팀원 작업 통합
+
+같은 수업 원본에서 출발한 팀원 세 명의 프로젝트를 이 저장소에 합쳤습니다. 장소 목록은 우리 `places.json`(원본 XLSX)을 기준으로 두고, 팀원 데이터는 **같은 장소에 필드로 덧붙였습니다.** 팀원 코드는 vanilla JS라 React/TS로 다시 구현했습니다.
+
+| 팀원 프로젝트 | 가져온 것 | 위치 |
+|---|---|---|
+| [ut-campus-tips](https://github.com/Bellhyuk05/ut-campus-tips) (교통대 꿀팁 지도) | OSM 캠퍼스 지도(SVG), 건물 37개, 층별 안내, 강의실 검색, 학생 추천 동선 4개, 버스 정류장 | `src/components/CampusMap.tsx`, `src/lib/campus.ts`, `public/campus/campus.svg` |
+| [knut-campus-guide](https://github.com/liuzhiyuan011215-cmyk/knut-campus-guide) (KNUT 캠퍼스 가이드) | 중국어(유학생) 모드: 장소 이름·주소·메뉴·영업시간·비고 번역 173곳, 유학생 생활 꿀팁 5개, 유학생 추천 표시 | `src/lib/i18n.tsx`, `place.zh` / `place.intl` |
+| [gyotong-yeojido](https://github.com/yufe9/gyotong-yeojido) (교통여지도) | 디자인(Liquid Glass·삿포로 테마), 음식 종류 분류와 AI 예시 사진, 구역·별점·혼밥·휴무일·거리, **네이버 리뷰 키워드와 건수**, 정리된 설명, Supabase 커뮤니티 기능의 구조 | `src/styles.css`, `scripts/lib/food.mjs`, `public/images/food/`, `supabase/schema.sql` |
+
+- 팀원 원본은 `data/teams/`에 그대로 보관합니다. 다시 가져오려면 세 저장소를 한 폴더에 clone한 뒤 `npm run teams -- <폴더>`를 실행합니다. 팀원 코드는 실행하지 않고 데이터 파일만 텍스트로 읽습니다.
+- 연결 규칙(`scripts/lib/teams.mjs`):
+  - 정규화한 이름(공백·괄호·지점 표기·학교 이름 제거)이 같은 장소끼리 연결합니다.
+  - 주소는 같은 건물의 다른 가게를 잘못 잇는 경우가 있어 연결에 쓰지 않습니다.
+  - 이름이 다른 같은 장소는 `data/team-aliases.json`에 등록합니다.
+  - 연결하지 못한 항목은 변환 보고서에만 나오고 목록에 추가하지 않습니다 (중복 방지).
+- 가져오지 않은 것:
+  - 자취방 시세(민간 매물을 다시 게시하는 문제)
+  - 카카오맵(이 프로젝트는 네이버 지도)
+  - 네이버 플레이스 사진(knut)
+  - 학번+이름 로그인(교통여지도). 비밀번호가 없어 다른 사람이 대신 들어갈 수 있기 때문입니다.
+- 교통여지도의 설명과 리뷰 키워드는 네이버 리뷰를 바탕으로 정리된 내용이라, 화면에 "네이버 플레이스 리뷰 키워드 (교통여지도 정리)"라고 출처를 붙입니다.
+
 ## 주요 기능
 
 **찾기**
-- 통합 검색: 이름, 위치, 분류, 대표메뉴, 한줄설명, 자세한 설명 (공백으로 나눈 단어는 모두 포함, 한글 입력 중 즉시 반영, **초성 검색** `ㄱㅌㄷ`)
-- 분류 필터 (맛집 / 카페 / 교내 시설 / 숨은 장소 / 생활 꿀팁 / 관광지 / 자유 정보), 정렬 (추천수·이름·확인한날)
-- 추가 필터: **지금 영업 중**(한국 시간 기준), **교내/교외**, **가격**(표기된 최저가 구간)
-- **검색·필터 상태가 주소에 담겨** 같은 화면을 링크로 공유할 수 있음
-- 첫 화면의 **추천 많은 곳**, 데이터에서 가장 최근 확인한 항목의 **최근 확인** 배지
+- 통합 검색: 이름, 위치, 분류, 대표메뉴, 설명, 음식 종류, 리뷰 키워드, **중국어 번역**까지 검색합니다.
+  - 공백으로 나눈 단어는 모두 포함해야 결과에 나옵니다.
+  - **초성 검색**(`ㄱㅌㄷ`)을 지원합니다.
+- 분류 칩(맛집 / 카페 / 교내 시설 / 숨은 장소 / 생활 꿀팁 / 유학생 꿀팁 / 관광지 / 자유 정보)
+- **음식 종류 칩**(짬뽕·짜장, 국밥·찌개, 부리또·바비큐 …)과 **구역**(교통대 앞 / 시내 / 교외)
+- 정렬: 추천수·별점·이름·확인한날
+- 추가 필터: **지금 영업 중**(한국 시간 기준), **유학생 추천**, **교내/교외**, **가격**(표기된 최저가 구간)
+- **강의실 찾기**: `테크노관 213`, `E5-213`을 입력하면 건물과 층, 그 층의 학과를 알려 줍니다. 학과 이름으로도 찾을 수 있습니다.
+- 검색·필터·화면 상태가 주소(`?q=…&food=…&view=campus`)에 담겨 링크로 공유할 수 있습니다.
 
 **보기**
-- 상세 보기: 위치(주소와 부가 설명 분리), 운영시간, 가격대, 대표메뉴, 설명, 사진, 네이버 지도 링크. ESC·닫기 버튼·뒤로 가기로 닫기, `#place=<id>` 주소로 공유
-- 맛집·카페 카드는 메뉴·가격 중심, 꿀팁·장소 카드는 설명 중심으로 표시
-- **지도 보기**(네이버 지도): 목록/지도 전환, 주소로 위치가 특정된 133곳에 분류 색 핀 표시. 같은 건물에 있는 곳은 숫자 핀 하나로 묶고, 누르면 목록이 열림. 검색·필터 결과가 그대로 지도에 반영되고 `?view=map`으로 공유 가능. 상세 보기에도 해당 장소의 작은 지도 표시 (지도 키가 없으면 지도 기능은 숨겨짐)
-- 밝은/어두운 화면 (기기 설정을 따르거나 직접 선택), 모바일에서 분류 칩을 한 줄로 넘겨 보기
+- 홈: 사진 분류 타일, 추천 많은 곳 캐러셀, 카드 목록
+- 상세: 대표 사진, 별점·거리·추천 수, 탭(소개 / 메뉴 / 정보 / 후기)
+  - 소개: 한줄설명, 자세한 설명, 네이버 리뷰 키워드, 교통여지도 정리
+  - 정보: 위치(부가 설명 분리), 운영시간, 휴무일, 혼밥, 작은 지도
+  - `#place=<id>` 주소로 공유할 수 있고, ESC·뒤로 가기로 닫습니다.
+- 사진: 실제 사진이 없는 맛집·카페는 음식 종류별 **AI 예시 사진**을 보여주고 "AI 생성 예시 사진" 안내를 붙입니다.
+- **네이버 지도**: 주소로 위치가 특정된 곳에 분류 색 핀을 꽂습니다. 같은 건물은 숫자 핀 하나로 묶습니다. 지도 키가 없으면 숨겨집니다.
+- **캠퍼스 지도**: 키 없이 항상 동작합니다.
+  - 건물 라벨(확대 정도에 따라 숨김), 장소 핀, 버스 정류장
+  - 건물을 누르면 층별 안내가 열립니다.
+  - 학생 추천 동선을 고르면 경로와 경유지를 그립니다.
+- **한국어 / 中文** 전환:
+  - 장소 이름은 중국어로 보여주고 한국어 원래 이름을 함께 보여줍니다.
+  - "한국어 이름 복사" 버튼이 있습니다.
+  - 번역이 없는 곳은 한국어로 보여주고 "暂无中文"이라고 표시합니다.
+- 반응형 레이아웃:
+  - 휴대폰(640px 미만): 하단 탭바(홈·지도·캠퍼스·즐겨찾기·내 정보), 카드 2열
+  - 태블릿: 카드 3열
+  - PC(1024px 이상): 왼쪽 유리 사이드바 + 오른쪽 내용, 상세는 오른쪽 패널
+- 밝은/어두운 화면: 기기 설정을 따르거나 직접 고릅니다.
 
-**내 목록 (로그인)**
-- 회원가입 / 로그인 / 비밀번호 찾기(가입할 때 정한 질문에 답하면 새 비밀번호 설정)
-- 계정별 즐겨찾기와 **내 목록**(원하는 이름으로 만들어 장소 담기, 목록별로 모아보기, 이름 변경·삭제)
-- 데이터 내보내기·가져오기, 계정 삭제
-- 로그인하지 않아도 즐겨찾기는 쓸 수 있고, 가입할 때 가져올 수 있음
-- ⚠️ 계정은 **각 브라우저의 localStorage에만** 저장됩니다. 서버가 없는 정적 사이트라 기기 간 자동 동기화는 되지 않습니다. 비밀번호와 질문 답변은 솔트를 붙여 PBKDF2-SHA256(21만 회)으로 해시해 저장하므로 원문을 보여줄 수 없고, 그래서 비밀번호 찾기는 "알려주기"가 아니라 **재설정**입니다. 같은 기기를 쓰는 사람이 개발자 도구로 저장소를 열어보는 것까지는 막을 수 없으므로 개인 목록을 구분하는 용도로 쓰세요.
+**회원 (Supabase 연결 시)**
+- 이메일 + 비밀번호 가입(메일 인증), 로그인, 비밀번호 재설정 메일, 닉네임 변경, 탈퇴
+- 즐겨찾기와 **내 목록**이 계정에 저장되어 기기 사이에 동기화됩니다. 로그인 전 즐겨찾기는 가입할 때 가져올 수 있습니다.
+- **별점과 한줄 후기**:
+  - 장소의 기본 별점(교통여지도)을 한 표로 치고, 평가한 사람이 3명 이상이면 회원 별점과 합칩니다.
+  - 금칙어를 차단하고, 서로 다른 3명이 신고하면 자동으로 숨깁니다.
+- **제보**(새 장소 / 정보가 달라요):
+  - 사진은 3장까지 보낼 수 있습니다. 브라우저에서 긴 변 1600px의 webp로 다시 그리므로 촬영 위치 같은 EXIF 정보가 남지 않습니다.
+  - 내 위치를 넣을 수 있습니다.
+  - 이메일·전화번호는 막고, 1분에 한 번만 보낼 수 있습니다.
+- **관리자 화면**(`?view=admin`, 운영자만):
+  - 제보 대기 / 승인 / 거절. '수정 후 승인'을 할 수 있고, 거절하면 사진도 지웁니다.
+  - 후기 숨기기·지우기(신고 많은 순), 회원 글쓰기 정지
+- 승인된 새 장소는 목록·지도에 "회원 제보" 배지를 달고 나타납니다. '정보가 달라요' 제보는 운영자가 확인한 뒤 원본 XLSX를 고쳐 반영합니다.
 
-**제보와 접수**
-- 장소 상세의 **정보가 달라요**, 푸터의 **새 장소·꿀팁 제보하기**가 내용이 채워진 GitHub 이슈 작성 화면을 엽니다 (GitHub 계정 필요, 내용은 공개).
-- 이슈가 열리면 GitHub Actions(`issue-log.yml`)가 저장소 루트의 **`이슈.txt`**에 접수 내용을 자동으로 덧붙여 커밋합니다.
+**Supabase 없이 (키가 없을 때)**
+- 계정은 이 브라우저의 localStorage에만 저장됩니다.
+  - 비밀번호와 질문 답변은 PBKDF2-SHA256(21만 회)으로 해시합니다.
+  - 비밀번호 찾기는 질문에 답해서 새 비밀번호를 정하는 방식입니다.
+- 제보는 GitHub 이슈 작성 화면으로 열리고, `issue-log.yml`이 `이슈.txt`에 기록합니다.
 
-**설치형 웹앱(PWA)**: 홈 화면에 추가할 수 있고, 한 번 열어본 화면은 오프라인에서도 열립니다. 링크 공유 시 제목·설명·이미지 미리보기가 표시됩니다.
+**설치형 웹앱(PWA)**: 홈 화면에 추가할 수 있고, 한 번 열어본 화면은 오프라인에서도 열립니다.
 
 ## 사용 데이터
 
-기준 데이터는 [`data/recommendations_normalized.xlsx`](data/recommendations_normalized.xlsx)의 `정규화데이터` 시트입니다 (317개 항목, 컬럼 11개, 추천수 합계 439). 여러 학생이 1주차에 제출한 원본을 정규화한 결과이며, 정규화 규칙은 원본 프로젝트의 `이호열_설명서.txt`에 있습니다. **원본 XLSX는 수정하지 않고**, 사이트용 정리는 변환 단계(`scripts/lib/derive.mjs`)에서 합니다.
+기준 데이터는 [`data/recommendations_normalized.xlsx`](data/recommendations_normalized.xlsx)의 `정규화데이터` 시트입니다.
+- 317개 항목, 컬럼 11개, 추천수 합계 439
+- 여러 학생이 1주차에 제출한 원본을 정규화한 결과입니다.
+
+**원본 XLSX는 수정하지 않고**, 사이트용 정리는 변환 단계(`scripts/lib/derive.mjs`)에서 합니다. 여기에 knut 유학생 꿀팁 5개가 더해져 사이트에는 322곳이 보입니다.
 
 ### 원본을 임의로 보완하지 않습니다
-- 빈 셀을 추측으로 채우지 않고, 운영시간·가격·메뉴·주소를 외부에서 가져와 보충하지 않습니다. 값이 없는 항목은 화면에서 숨깁니다.
-- 지도 링크는 네이버 지도(`naver.me`, `map.naver.com`)만 사용합니다. 한 칸에 여러 링크가 `|`로 묶여 있으면 하나만 고르고(`naver.me` 우선) 끝에 붙은 잘못된 문자는 제거합니다.
+- 빈 셀을 추측으로 채우지 않습니다. 값이 없는 항목은 화면에서 숨깁니다.
+- 팀원 데이터(구역, 별점, 리뷰 키워드, 번역 등)는 원본 칸을 덮어쓰지 않고 별도 필드로 보여줍니다.
+- 지도 링크는 네이버 지도(`naver.me`, `map.naver.com`)만 사용합니다.
 
 ### 변환 때 하는 정리 (모두 `npm run data` 출력에 건수가 보고됨)
 | 정리 | 내용 |
 |---|---|
-| 이름 | `3_생활꿀팁_동아리 신청` → `동아리 신청` 처럼 폴더명 접두어 제거, 밑줄은 공백으로. 항목 ID와 즐겨찾기는 **원본 이름 기준**이라 영향이 없음 |
-| 한줄설명 | `~에 관한 생활 정보`, `~ 이용에 참고할 수 있는 장소 정보`, `식사 메뉴를 제공하는 식당` 같은 자동 문구는 숨기고, 원본 자세한 설명의 첫 문장으로 대신함(날짜·제목 표시·너무 짧은 조각은 제외). 없으면 비움 |
-| 대표메뉴 | 다른 메뉴에 포함되는 조각(`플레이트` ⊂ `밍거스 플레이트`)과 중복 제거 |
-| 확인한날 | `26-10-06` → `2026-10-06`. 연월만 있으면 그대로 표시하고 정렬에는 해당 월 1일을 씀. 날짜가 없으면 정렬에서 뒤로 |
-| 위치 | `주소 \| 부가 설명`을 주소와 설명으로 분리, `없음`은 비움 |
-| 교내/교외 | 위치 문자열만으로 판단(대학로 50·교내·건물 이름 → 교내, 그 외 주소 → 교외). 근거가 없으면 분류하지 않음 |
-| 가격 구간 | 표기된 금액 중 최저가 기준 (`무료`, 1만원 미만, 1~2만원, 2만원 이상) |
-| 지도 좌표 | `data/place-coordinates.json`(원본 이름 → 주소를 변환한 좌표)에서 가져옴. 학교 대표 주소(대학로 50)로만 변환된 57곳은 건물·호실을 구분할 수 없어 **핀을 만들지 않음** |
-| 운영시간 | **요일과 시간이 모두 명확한 경우만** 해석해 '지금 영업 중'에 사용(브레이크타임·휴무 요일 포함). 애매하면(요일 없음, `확인 필요`, `영업안하는 날도있음` 등) 판단하지 않음 |
+| 이름 | `3_생활꿀팁_동아리 신청` → `동아리 신청` 처럼 폴더명 접두어 제거. 항목 ID와 즐겨찾기는 **원본 이름 기준**이라 영향이 없음 |
+| 한줄설명 | 자동 생성 문구는 숨기고 원본 자세한 설명의 첫 문장으로 대신함 |
+| 대표메뉴 | 다른 메뉴에 포함되는 조각과 중복 제거 |
+| 확인한날 | `26-10-06` → `2026-10-06`. 날짜가 없으면 정렬에서 뒤로 |
+| 위치 | `주소 \| 부가 설명`을 주소와 설명으로 분리 |
+| 교내/교외 | 위치 문자열만으로 판단. 근거가 없으면 분류하지 않음 |
+| 가격 구간 | 표기된 금액 중 최저가 기준 |
+| 지도 좌표 | `data/place-coordinates.json`에서 가져옴. 학교 대표 주소(대학로 50)로만 변환된 곳은 핀을 만들지 않음. 우리 좌표가 없으면 교통여지도 좌표로 보충 |
+| 운영시간 | 요일과 시간이 모두 명확한 경우만 해석해 '지금 영업 중'에 사용 |
+| 팀원 데이터 | 교통여지도 94곳, knut 173곳, 캠퍼스 지도 위치 148곳 연결. 리뷰 키워드는 설명 문장의 `"키워드"(N건)` 형식에서 꺼냄 |
+| 음식 종류 | 교통여지도 규칙(이름·메뉴 낱말)으로 맛집·카페를 20종류로 분류하고 예시 사진을 고름 |
+| 캠퍼스 좌표 | 건물 코드가 있으면 건물 위치, 아니면 위도·경도를 ut 지도와 같은 식으로 투영 |
 
 ## 기술 스택
 
-React 18, TypeScript, Vite 5, 일반 CSS, Lucide React, 네이버 지도 JavaScript API v3, SheetJS(`xlsx`, 변환 스크립트 전용), sharp(이미지·아이콘 생성 스크립트 전용), Playwright(`playwright-core`)와 axe-core(테스트), GitHub Actions + GitHub Pages
+- 화면: React 18, TypeScript, Vite 5, 일반 CSS, Lucide React, Pretendard(가변 글꼴, 저장소에서 함께 배포)
+- 지도: 네이버 지도 JavaScript API v3, Leaflet 1.9(캠퍼스 지도)
+- 백엔드: Supabase(Auth·Postgres·RLS·Storage, `@supabase/supabase-js`)
+- 스크립트: SheetJS(`xlsx`, 변환 스크립트 전용), sharp(이미지 스크립트 전용)
+- 테스트: Playwright(`playwright-core`), axe-core
+- 배포: GitHub Actions + GitHub Pages
 
 ## 설치와 실행
 
-Node.js 20 이상을 권장합니다 (18에서도 동작 확인).
+Node.js 22 이상이 필요합니다. 단위 테스트가 TypeScript 파일을 바로 불러오기 때문입니다.
 
 ```powershell
 npm install
@@ -70,101 +138,141 @@ npm run preview      # 빌드 결과 미리보기 (http://localhost:4173/campuse
 npm run typecheck    # 타입 검사만
 ```
 
+로컬 설정은 `.env.local`에 씁니다 (커밋하지 않음).
+
+```dotenv
+VITE_NAVER_MAP_CLIENT_ID=      # 네이버 지도 Client ID (없으면 지도 숨김)
+VITE_SUPABASE_URL=             # https://<프로젝트>.supabase.co (없으면 Supabase 기능 끔)
+VITE_SUPABASE_PUBLISHABLE_KEY= # sb_publishable_… (공개용 키)
+```
+
 ### 네이버 지도 키
 
-지도는 [네이버 클라우드 플랫폼](https://console.ncloud.com) Maps의 **Client ID**가 있어야 표시됩니다. 키가 없으면 지도 버튼과 상세의 지도만 숨겨지고 나머지는 그대로 동작합니다.
+지도는 [네이버 클라우드 플랫폼](https://console.ncloud.com) Maps의 **Client ID**가 있어야 표시됩니다.
 
 1. 콘솔 → Maps → Application 등록에서 **Dynamic Map**을 선택합니다.
-2. Web 서비스 URL에 `https://skyhy0228.github.io`와 개발용 `http://localhost:5173`, `http://localhost:4173`을 등록합니다. 등록하지 않은 주소에서는 "인증에 실패했습니다" 안내가 나옵니다.
-3. 로컬: `.env.example`을 `.env.local`로 복사해 `VITE_NAVER_MAP_CLIENT_ID`를 채웁니다 (`.env.local`은 커밋하지 않음).
-4. 배포: 저장소 Settings → Secrets and variables → Actions → **Variables**에 `VITE_NAVER_MAP_CLIENT_ID`를 등록합니다. 등록한 주소에서만 동작하는 공개용 값이라 빌드 결과에 포함됩니다.
+2. Web 서비스 URL에 다음 주소를 등록합니다.
+   - `https://skyhy0228.github.io`
+   - 개발용 `http://localhost:5173`, `http://localhost:4173`
+3. 배포: 저장소 Settings → Secrets and variables → Actions → **Variables**에 `VITE_NAVER_MAP_CLIENT_ID`를 등록합니다.
+
+### Supabase 설정 (처음 한 번)
+
+1. [supabase.com](https://supabase.com)에서 새 프로젝트를 만듭니다.
+2. **SQL Editor → New query**에 [`supabase/schema.sql`](supabase/schema.sql)을 **전부** 붙여 넣고 Run합니다. 다시 실행해도 안전합니다. 만들어지는 것은 다음과 같습니다.
+   - 테이블: 프로필, 즐겨찾기, 후기, 신고, 제보, 금칙어
+   - RLS 정책, 서버 함수, 사진 보관함 `place-photos`
+3. 사이트에서 운영자로 쓸 계정을 가입합니다. 그런 다음 SQL Editor에서 아래를 **내 이메일로 바꿔** 한 번 실행합니다. 이메일은 저장소 파일에 쓰지 않습니다.
+   ```sql
+   insert into public.admins (user_id)
+   select id from auth.users where email = '내이메일@example.com'
+   on conflict do nothing;
+   ```
+4. **Authentication → URL Configuration**에 주소를 등록합니다.
+   - Site URL: `https://skyhy0228.github.io/campuse_place/`
+   - Redirect URLs: 위 주소, `http://localhost:5173/campuse_place/`, `http://localhost:4173/campuse_place/`
+   - 인증 메일과 비밀번호 재설정 메일의 링크가 이 주소로 돌아옵니다.
+5. **Project Settings → API Keys**에서 Project URL과 **publishable** 키를 복사합니다.
+   - 로컬: `.env.local`에 넣습니다.
+   - 배포: GitHub Actions **Variables**에 `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`로 등록합니다.
+
+**보안 안내**
+- publishable 키와 URL은 브라우저에 공개되는 값이고, 보호는 RLS와 서버 함수가 합니다.
+- **`secret` / `service_role` 키는 어디에도 넣지 마세요.**
+- Supabase 기본 메일 발송은 시간당 몇 통으로 제한됩니다. 회원이 많아지면 Authentication → SMTP 설정에서 메일 서버를 연결하세요.
 
 ## 테스트
 
 ```powershell
-npm run test:unit    # 데이터 정리 규칙, 운영시간 해석, 좌표 선별, 이슈 기록 스크립트
-npm run build:e2e    # 테스트용 빌드 (가짜 지도 키 .env.e2e 사용)
-npm run test:e2e     # 브라우저 테스트(Chrome): 검색·필터·상세·지도·계정·접근성(axe)·PWA
+npm run test:unit    # 데이터 정리 규칙, 팀원 데이터 연결·리뷰 키워드·음식 분류·캠퍼스 투영, 강의실 검색
+npm run build:e2e    # 테스트용 빌드: dist(가짜 지도 키) + dist-cloud(가짜 Supabase 주소)
+npm run test:e2e     # 브라우저 테스트(Chrome)
 npm test             # 위 세 가지를 차례로
 ```
 
-- 브라우저 테스트는 `dist`를 Vite preview로 띄워 설치된 Chrome으로 접속합니다. 다른 Chrome 경로는 `E2E_CHROME_PATH`, 포트는 `E2E_PORT`로 바꿉니다.
-- 네이버 지도 스크립트는 테스트에서 가짜 스크립트(`tests/e2e/helpers.mjs`)로 바꿔 끼워, 실제 키·네트워크 없이 핀 구성과 화면 동작을 확인합니다. 그래서 실제 지도 그림은 테스트하지 않습니다. 지도 키 없이 빌드한 `dist`에서는 지도 테스트가 건너뛰어집니다.
-- 접근성 테스트는 axe-core(WCAG 2.1 A/AA + 모범 사례, 색 대비 포함)를 밝은/어두운 화면의 주요 화면에 실행합니다.
+브라우저 테스트가 확인하는 것:
+- 검색, 필터, 상세, 네이버 지도, 로컬 계정, 접근성(axe), PWA
+- 팀원 기능: 중국어 모드, 캠퍼스 지도, 강의실 검색, 리뷰 키워드
+- Supabase 흐름
+
+참고:
+- 네이버 지도 스크립트와 Supabase 서버는 가짜로 바꿔 끼워, 실제 키·네트워크 없이 화면 동작과 보내는 요청을 확인합니다 (`tests/e2e/helpers.mjs`, `tests/e2e/cloud.test.mjs`). 그래서 **실제 Supabase의 RLS·함수는 자동 테스트하지 않습니다.** 프로젝트를 만든 뒤 가입 → 후기 → 제보 → 관리자 승인을 한 번 직접 확인하세요.
+- 접근성 테스트는 axe-core(WCAG 2.1 A/AA + 모범 사례, 색 대비 포함)를 실행합니다. 대상은 밝은/어두운 화면의 목록·상세·중국어 화면·캠퍼스 지도·계정 화면입니다.
 - GitHub Actions는 `main`에 push할 때마다 테스트를 통과해야 배포합니다.
 
 ## 데이터 변환
 
-브라우저가 XLSX를 직접 읽지 않고, 빌드 전에 JSON으로 변환합니다.
-
 ```powershell
-npm run data               # data/recommendations_normalized.xlsx → public/data/places.json
-node scripts/convert-data.mjs --verbose   # 해석하지 못한 운영시간·날짜 목록까지 출력
+npm run data                               # XLSX + data/teams/*.json → public/data/places.json, campus.json
+node scripts/convert-data.mjs --verbose    # 해석하지 못한 운영시간·날짜, 연결하지 못한 ut 항목까지 출력
+npm run teams -- <팀원 저장소 clone 폴더>   # 팀원 데이터·캠퍼스 지도·음식 사진 다시 가져오기
 ```
 
-`npm run build`의 `prebuild`에서 자동 실행됩니다. 변환 스크립트는 시트·컬럼과 행 수(XLSX = JSON)를 검증하고 정리 건수를 보고합니다.
+`npm run build`의 `prebuild`에서 자동 실행됩니다.
 
-데이터를 갱신하려면: ① 새 XLSX로 교체(시트 이름 `정규화데이터`, 컬럼 이름 유지) ② `npm run data` ③ 변경된 `public/data/places.json` 커밋·push.
+## 이미지
 
-## 이미지 갱신
-
-사진은 `public/images/places/`에 웹용(최대 폭 960px, WebP)으로 들어 있고, 연결 정보는 `data/place-images.json`에 있습니다.
-
-```powershell
-npm run images                      # 기본 원본 폴더에서 다시 연결·변환
-npm run images -- "D:\photos"       # 다른 폴더를 지정할 수도 있음
-npm run data                        # places.json에 반영 (npm run data:all 은 두 단계를 한 번에)
-```
-
-- 파일 이름이 `<장소 이름>_<번호>.jpg`(번호가 없으면 1번)이고 장소 이름이 XLSX의 `이름`과 (공백·기호·대소문자를 무시하고) 같을 때 연결합니다. 장소당 최대 2장, 같은 사진은 한 번만 씁니다.
-- 이름이 달라도 같은 장소임을 **원본 txt의 지도 링크·주소로 확인한 것**은 `data/image-aliases.json`에 `"사진 이름": "XLSX 이름"`으로 등록합니다 (예: `"쇼쿠스시": "쇼쿠스시 충주호암점"`).
-- 원본 이미지는 수정하지 않고 리사이즈한 복사본만 만듭니다. 이 스크립트는 로컬의 원본 프로젝트 경로(`F:\vibecoding\campus-place-recommender-draft`)를 기본값으로 쓰므로 Actions에서는 실행되지 않고, 생성된 이미지는 저장소에 커밋되어 있습니다.
-
-## 아이콘·공유 이미지
-
-`npm run assets`가 PWA 아이콘과 링크 공유 이미지(`public/og.png`)를 만듭니다. 디자인을 바꿀 때만 실행하세요.
+- 장소 실제 사진:
+  - `public/images/places/`(WebP, 최대 폭 960px)에 있고, 연결 정보는 `data/place-images.json`에 있습니다.
+  - `npm run images`로 다시 만들고 `npm run data`로 반영합니다.
+- 음식 예시 사진:
+  - `public/images/food/`(교통여지도 팀원이 Gemini로 생성)에 있습니다. 출처는 `public/images/food/CREDITS.md`에 있습니다.
+  - 실제 가게 메뉴 사진이 아닙니다.
 
 ## 이슈 접수 (`이슈.txt`)
 
-1. 사용자가 사이트에서 제보 버튼을 누르면 `.github/ISSUE_TEMPLATE/`의 양식(`report.yml`, `new-place.yml`)이 열립니다. 장소 이름은 미리 채워집니다.
-2. 이슈가 열리면 `.github/workflows/issue-log.yml`이 `scripts/log-issue.mjs`로 번호·제목·작성자·라벨·링크·본문을 `이슈.txt`에 덧붙이고 `main`에 커밋합니다. 같은 번호는 중복 기록하지 않고, 제목·본문은 환경 변수로만 전달해 스크립트 주입을 막습니다.
-3. 양식의 라벨(`제보`, `새 장소`)은 저장소에 같은 이름의 라벨을 만들어 두면 자동으로 붙습니다 (없어도 기록은 됩니다).
+Supabase를 연결하지 않았을 때 제보는 GitHub 이슈로 받습니다.
+1. `.github/ISSUE_TEMPLATE/` 양식이 열립니다.
+2. 이슈가 열리면 `issue-log.yml`이 `이슈.txt`에 기록합니다.
 
 ## GitHub Pages 배포
 
 `main`에 push하면 `.github/workflows/deploy.yml`이 단위·브라우저 테스트를 돌린 뒤 빌드해 Pages에 배포합니다.
 
 - 저장소 Settings → Pages → Source를 **GitHub Actions**로 설정해야 합니다.
-- Vite `base`는 `/campuse_place/`이고, 데이터·이미지는 모두 `import.meta.env.BASE_URL` 기준으로 불러옵니다. 다른 경로에 배포할 때는 `VITE_BASE` 환경 변수와 `src/config.ts`의 `SITE_URL`, `index.html`의 OG 주소를 바꿉니다.
-- 화면이 하나뿐이고 상세 보기는 주소 해시, 필터는 쿼리 문자열을 쓰므로 새로고침해도 404가 나지 않습니다.
-- 서비스 워커(`public/sw.js`): 페이지와 `places.json`은 네트워크 우선, 빌드 파일·이미지는 저장본 우선이라 새 배포가 바로 반영됩니다.
+- Vite `base`는 `/campuse_place/`입니다. 다른 경로에 배포할 때는 다음을 바꿉니다.
+  - `VITE_BASE` 환경 변수
+  - `src/config.ts`의 `SITE_URL`
+  - `index.html`의 OG 주소
+  - Supabase Redirect URL
+- 서비스 워커(`public/sw.js`): 페이지와 데이터는 네트워크 우선, 빌드 파일·이미지는 저장본 우선입니다.
+
+## 라이선스와 출처
+
+- 캠퍼스 지도 데이터: © OpenStreetMap contributors (ODbL). 화면과 지도 오른쪽 아래에 표시하며, 지우지 않습니다.
+- 층별 안내: 국립한국교통대학교 홈페이지 캠퍼스지도(ut 팀원 정리, 2026-10-20 확인)
+- 글꼴: Pretendard (SIL OFL 1.1)
+- 지도 라이브러리: Leaflet (BSD-2-Clause)
+- 음식 예시 사진: 교통여지도 팀원 Gemini 생성 (`public/images/food/CREDITS.md`)
 
 ## 폴더 구조
 
 ```text
 campuse_place/
-├─ .github/
-│  ├─ workflows/deploy.yml        테스트 → 빌드 → Pages 배포
-│  ├─ workflows/issue-log.yml     이슈 → 이슈.txt 자동 기록
-│  └─ ISSUE_TEMPLATE/             제보 양식
+├─ .github/workflows/        deploy.yml(테스트 → 빌드 → 배포), issue-log.yml
 ├─ data/
 │  ├─ recommendations_normalized.xlsx   기준 데이터 (원본 보존)
-│  ├─ place-images.json                 장소 이름 → 이미지 경로
-│  ├─ place-coordinates.json            장소 이름 → 주소를 변환한 좌표
-│  └─ image-aliases.json                확인된 사진 이름 별칭
+│  ├─ teams/                            팀원 원본 데이터 (gyotong, knut, campus, floors)
+│  ├─ team-aliases.json                 팀원 데이터 이름 별칭
+│  ├─ place-images.json, place-coordinates.json, image-aliases.json
 ├─ public/
-│  ├─ data/places.json                  변환 결과 (사이트가 불러옴)
-│  ├─ images/places/, icons/, og.png    사진·아이콘·공유 이미지
-│  └─ manifest.webmanifest, sw.js       설치형 웹앱
+│  ├─ data/places.json, data/campus.json   변환 결과
+│  ├─ campus/campus.svg                    캠퍼스 지도 그림 (OSM)
+│  ├─ images/places/, images/food/         실제 사진, AI 음식 예시 사진
+│  └─ manifest.webmanifest, sw.js
 ├─ scripts/
-│  ├─ convert-data.mjs                  XLSX → JSON (정리 보고 출력)
-│  ├─ lib/derive.mjs                    정리·해석 규칙(이름, 요약, 메뉴, 날짜, 교내/교외, 가격, 운영시간)
-│  ├─ sync-images.mjs, make-assets.mjs, log-issue.mjs, place-id.mjs
+│  ├─ convert-data.mjs                     XLSX + 팀원 데이터 → JSON
+│  ├─ lib/derive.mjs, lib/teams.mjs, lib/food.mjs
+│  ├─ import-teams.mjs, build-e2e-cloud.mjs, sync-images.mjs, make-assets.mjs, log-issue.mjs
+├─ supabase/schema.sql                     Supabase 테이블·RLS·함수·보관함
 ├─ src/
-│  ├─ App.tsx, main.tsx, styles.css, types.ts, config.ts
-│  ├─ components/   PlaceCard, PlaceDialog, PlaceMap, PlaceMiniMap, PopularStrip, AuthDialog, AccountDialog, CollectionPicker, ThemeToggle, Modal, PlaceImage
-│  └─ lib/          places(검색·필터·정렬), naverMap·useNaverMap(지도), hours, choseong, urlState, auth, userData, session, theme, report
+│  ├─ App.tsx, main.tsx, styles.css, types.ts
+│  ├─ components/  레이아웃(Controls, HomeTiles, TabBar, SideList, LangToggle), 장소(PlaceCard, PlaceDialog, PopularStrip),
+│  │               지도(PlaceMap, PlaceMiniMap, CampusMap, RoomFinder), 회원(CloudAuthDialog, AuthDialog, AccountDialog,
+│  │               CollectionPicker, Reviews, SubmitDialog, AdminPage)
+│  └─ lib/         places, i18n, campus·campusData, supabase·remote·submissionPlace, session·auth·userData,
+│                  naverMap·useNaverMap, cover, photo, hours, choseong, urlState, theme, report, useGlassSheen
 └─ tests/
-   ├─ unit/         derive, log-issue
-   └─ e2e/          site, map, auth, a11y, pwa (+ helpers: 가짜 지도 스크립트)
+   ├─ unit/        derive, teams, campus, log-issue
+   └─ e2e/         site, map, auth, a11y, pwa, teams, cloud (+ helpers)
 ```

@@ -20,12 +20,16 @@ import {
   splitLocation,
   text,
 } from "./lib/derive.mjs";
+import { foodPhoto, foodType } from "./lib/food.mjs";
+import { campusPosition, createMatcher, gyotongCoordinate, gyotongFields, knutFields, knutTipPlace } from "./lib/teams.mjs";
 import { placeId } from "./place-id.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const xlsxPath = path.join(root, "data", "recommendations_normalized.xlsx");
 const imageMapPath = path.join(root, "data", "place-images.json");
 const coordsPath = path.join(root, "data", "place-coordinates.json");
+const teamsDir = path.join(root, "data", "teams");
+const teamAliasPath = path.join(root, "data", "team-aliases.json");
 const outDir = path.join(root, "public", "data");
 const outPath = path.join(outDir, "places.json");
 const SHEET = "정규화데이터";
@@ -86,6 +90,19 @@ function main() {
   const coordMap = fs.existsSync(coordsPath) ? JSON.parse(fs.readFileSync(coordsPath, "utf8")) : {};
   const allNames = new Set(rows.map((r) => text(r[COLUMNS.name])));
 
+  // 팀원 데이터. 없으면 팀원 필드 없이 변환한다.
+  const readTeam = (file) => {
+    const p = path.join(teamsDir, file);
+    return fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : null;
+  };
+  const teamAliases = fs.existsSync(teamAliasPath) ? JSON.parse(fs.readFileSync(teamAliasPath, "utf8")) : {};
+  const gyotong = readTeam("gyotong.json");
+  const knut = readTeam("knut.json");
+  const campus = readTeam("campus.json");
+  const gyotongMatcher = createMatcher(gyotong?.places ?? [], { names: (e) => [e.name], aliases: teamAliases });
+  const knutMatcher = createMatcher(knut?.places ?? [], { names: (e) => [e.name], aliases: teamAliases });
+  const campusMatcher = createMatcher(campus?.places ?? [], { names: (e) => [e.name, ...(e.aka ?? [])], aliases: teamAliases });
+
   const report = {
     renamed: [],
     summaryReplaced: 0,
@@ -101,6 +118,12 @@ function main() {
     campusUnknown: 0,
     pinned: 0,
     coordSkipped: 0,
+    pinnedFromTeam: 0,
+    gyotong: 0,
+    keywords: 0,
+    knut: 0,
+    campus: 0,
+    food: 0,
   };
 
   const places = [];
@@ -157,17 +180,27 @@ function main() {
       else report.hoursUnparsed.push(`${originalName}: ${hours.slice(0, 60)}`);
     }
 
+    const names = [originalName, name];
+    const g = gyotongMatcher.match(names);
+    const k = knutMatcher.match(names);
+    const u = campusMatcher.match(names);
+
     const rawCoord = coordMap[originalName.normalize("NFC")];
-    const coord = rawCoord ? pickCoordinate(rawCoord) : null;
+    let coord = rawCoord ? pickCoordinate(rawCoord) : null;
     if (coord) report.pinned += 1;
     else if (rawCoord) report.coordSkipped += 1;
+    // 우리 좌표가 없으면 교통여지도가 주소로 변환해 둔 좌표를 쓴다.
+    if (!coord && g) {
+      coord = gyotongCoordinate(g);
+      if (coord) report.pinnedFromTeam += 1;
+    }
 
     const price = text(row[COLUMNS.price]);
     const { priceMin, free } = parsePrice(price);
     const band = priceBand(priceMin, free);
     if (band) report.pricesBanded += 1;
 
-    places.push({
+    const place = {
       id,
       name,
       category: text(row[COLUMNS.category]),
@@ -187,16 +220,86 @@ function main() {
       checkedSort: checked.sort,
       images: imageMap[originalName.normalize("NFC")] ?? [],
       ...(coord ?? {}),
-    });
+    };
+
+    const category = place.category;
+    if (category === "식당" || category === "카페") {
+      const type = foodType({ name, menu, category: g?.category === "주점" ? "주점" : category });
+      if (type) {
+        place.foodType = type;
+        place.foodPhoto = foodPhoto({ name, menu }, type);
+        report.food += 1;
+      }
+    }
+    if (g) {
+      Object.assign(place, gyotongFields(g));
+      report.gyotong += 1;
+      if (place.reviewKeywords) report.keywords += 1;
+    }
+    if (k) {
+      Object.assign(place, knutFields(k));
+      report.knut += 1;
+    }
+    const position = campusPosition(u, coord);
+    if (position) {
+      place.campusXY = position;
+      report.campus += 1;
+    }
+    places.push(place);
   }
 
   if (places.length + skippedNoName !== rows.length) throw new Error("행 수 검증 실패");
 
+  // knut 유학생 생활 꿀팁은 원본 XLSX 에 없는 항목이라 따로 덧붙인다.
+  let intlTips = 0;
+  for (const tip of knut?.tips ?? []) {
+    const raw = knutTipPlace(tip);
+    const id = placeId(raw.name);
+    if (seenIds.has(id)) continue;
+    seenIds.add(id);
+    places.push({
+      id,
+      name: raw.name,
+      category: raw.category,
+      location: raw.location,
+      locationNotes: [],
+      campus: "in",
+      mapUrl: pickNaverMapUrl(raw.mapUrl),
+      hours: raw.hours,
+      schedule: null,
+      price: raw.price,
+      priceBand: "",
+      menu: "",
+      summary: raw.summary,
+      details: raw.details,
+      recommendations: 0,
+      checkedAt: "",
+      checkedSort: "",
+      images: [],
+      zh: raw.zh,
+      source: "knut",
+    });
+    intlTips += 1;
+  }
+
   fs.mkdirSync(outDir, { recursive: true });
   fs.writeFileSync(outPath, JSON.stringify({ count: places.length, places }) + "\n", "utf8");
 
+  // 캠퍼스 지도 화면이 쓰는 건물·정류장·동선·층별 안내 (ut 꿀팁 지도)
+  const floors = readTeam("floors.json");
+  if (campus) {
+    const campusOut = {
+      size: campus.size,
+      buildings: campus.buildings,
+      busStops: campus.busStops,
+      routes: campus.routes.map(({ id, title, color, via, desc, line, meters, stops }) => ({ id, title, color, via, desc, line, meters, stops })),
+      floors: floors ?? null,
+    };
+    fs.writeFileSync(path.join(outDir, "campus.json"), JSON.stringify(campusOut) + "\n", "utf8");
+  }
+
   console.log(`XLSX 행 수: ${rows.length}`);
-  console.log(`JSON 장소 수: ${places.length} (이름 없어 제외: ${skippedNoName})`);
+  console.log(`JSON 장소 수: ${places.length} (이름 없어 제외: ${skippedNoName}, 유학생 꿀팁 추가: ${intlTips})`);
   console.log(`추천수 합계: ${places.reduce((s, p) => s + p.recommendations, 0)}`);
   console.log(`지도 링크 보유: ${places.filter((p) => p.mapUrl).length}, 이미지 연결: ${places.filter((p) => p.images.length).length}`);
   console.log("--- 정리 보고 ---");
@@ -207,8 +310,15 @@ function main() {
   console.log(`교내 ${report.campusIn} / 교외 ${report.campusOut} / 구분 불가 ${report.campusUnknown}`);
   console.log(`운영시간 해석: ${report.hoursParsed}곳 (해석 못 한 ${report.hoursUnparsed.length}곳은 '영업 중' 필터에서 제외)`);
   console.log(`가격 구간 분류: ${report.pricesBanded}곳`);
-  console.log(`지도 핀: ${report.pinned}곳 (좌표가 학교 대표 주소뿐이라 제외 ${report.coordSkipped}곳)`);
+  console.log(`지도 핀: ${report.pinned}곳 (좌표가 학교 대표 주소뿐이라 제외 ${report.coordSkipped}곳, 교통여지도 좌표로 보충 ${report.pinnedFromTeam}곳)`);
+  console.log("--- 팀원 데이터 ---");
+  const unmatched = (m) => m.unmatched().map((e) => e.name);
+  console.log(`교통여지도 연결: ${report.gyotong}곳 (리뷰 키워드 ${report.keywords}곳), 못 찾음: ${unmatched(gyotongMatcher).join(", ") || "없음"}`);
+  console.log(`knut 중국어 연결: ${report.knut}곳, 못 찾음: ${unmatched(knutMatcher).join(", ") || "없음"}`);
+  console.log(`캠퍼스 지도 위치: ${report.campus}곳, ut 항목 중 못 찾음 ${unmatched(campusMatcher).length}개 (--verbose 로 목록 보기)`);
+  console.log(`음식 종류 분류: ${report.food}곳`);
   if (process.argv.includes("--verbose")) {
+    console.log("\nut 꿀팁 지도에서 연결하지 못한 항목:\n" + unmatched(campusMatcher).join("\n"));
     console.log("\n해석하지 못한 운영시간:\n" + report.hoursUnparsed.join("\n"));
     console.log("\n해석하지 못한 날짜:\n" + report.dateUnresolved.join("\n"));
   }

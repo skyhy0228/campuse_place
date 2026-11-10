@@ -32,12 +32,16 @@ function groupsOf(list) {
 
 const markers = (page) => page.locator(".mapCanvas .fakeMarker");
 
+// PC 화면의 사이드바 메뉴(홈/지도/캠퍼스). 지도 키가 없으면 '지도'가 없다.
+const nav = (page) => page.getByRole("navigation", { name: "화면 이동" }).first();
+const hasMap = async (page) => (await nav(page).getByRole("button", { name: "지도", exact: true }).count()) > 0;
+
 async function openMap(page, t) {
-  if (!(await page.locator(".viewToggle").count())) {
+  if (!(await hasMap(page))) {
     t.skip("지도 키 없이 빌드된 dist 입니다. npm run build:e2e 로 빌드하세요.");
     return false;
   }
-  await page.getByRole("button", { name: "지도", exact: true }).click();
+  await nav(page).getByRole("button", { name: "지도", exact: true }).click();
   await page.waitForSelector(".mapCanvas .fakeMap");
   return true;
 }
@@ -63,7 +67,7 @@ describe("지도 보기", () => {
       await page.waitForSelector(".mapCanvas .fakeMarker");
       assert.equal(await markers(page).count(), groupsOf(places).length);
 
-      await page.getByRole("button", { name: "목록", exact: true }).click();
+      await nav(page).getByRole("button", { name: "홈", exact: true }).click();
       await page.waitForSelector("article.card");
       await settle(page);
       assert.doesNotMatch(page.url(), /view=map/);
@@ -87,6 +91,7 @@ describe("지도 보기", () => {
       await dialog.waitFor();
       assert.equal(await dialog.locator("h2").innerText(), name);
       assert.match(page.url(), /#place=p[0-9a-f]{8}$/);
+      await dialog.getByRole("tab", { name: "정보" }).click();
       await dialog.locator(".miniMap .fakeMarker").waitFor();
       assert.equal(await dialog.locator(".miniMap .fakeMarker").count(), 1);
 
@@ -122,10 +127,12 @@ describe("지도 보기", () => {
   test("상세 보기: 좌표가 있는 장소만 작은 지도를 보여준다", (t) =>
     run(
       async (page) => {
-        if (!(await page.locator(".viewToggle").count())) return t.skip("지도 키 없이 빌드된 dist 입니다.");
+        if (!(await hasMap(page))) return t.skip("지도 키 없이 빌드된 dist 입니다.");
+        await page.getByRole("tab", { name: "정보" }).click();
         await page.locator("dialog[open] .miniMap .fakeMarker").waitFor();
         await page.evaluate((id) => (location.hash = `#place=${id}`), unlocated[0].id);
         await page.locator("dialog[open] h2", { hasText: unlocated[0].name }).waitFor();
+        await page.getByRole("tab", { name: "정보" }).click();
         assert.equal(await page.locator("dialog[open] .miniMap").count(), 0);
       },
       { url: `#place=${located[0].id}` },

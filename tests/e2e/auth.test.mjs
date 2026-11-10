@@ -50,7 +50,8 @@ async function logout(page) {
   await page.waitForSelector("dialog[open]", { state: "detached" });
 }
 
-const loggedInAs = (page, username) => page.waitForFunction((name) => document.querySelector(".headerActions .accountName")?.textContent === name, username);
+const loggedInAs = (page, username) =>
+  page.waitForFunction((name) => document.querySelector(".headerActions .account")?.getAttribute("aria-label") === `내 계정 (${name})`, username);
 const favoriteButton = (page) => page.getByRole("button", { name: /^즐겨찾기 \d+$/ });
 
 describe("회원가입", () => {
@@ -118,7 +119,7 @@ describe("로그인·로그아웃", () => {
       await signup(page);
       await loggedInAs(page, "tester01");
       await logout(page);
-      assert.equal((await headerButton(page).innerText()).trim(), "로그인");
+      assert.equal(await headerButton(page).getAttribute("aria-label"), "로그인");
 
       await login(page, "tester01", "Wrong1234");
       assert.equal(await alertText(page), "아이디 또는 비밀번호가 올바르지 않습니다.");
@@ -308,7 +309,7 @@ describe("계정 삭제", () => {
       await page.getByPlaceholder("비밀번호").fill(PASSWORD);
       await page.getByRole("button", { name: "삭제하기" }).click();
       await page.waitForSelector("dialog[open]", { state: "detached" });
-      assert.equal((await headerButton(page).innerText()).trim(), "로그인");
+      assert.equal(await headerButton(page).getAttribute("aria-label"), "로그인");
       assert.equal(JSON.parse(await page.evaluate(() => localStorage.getItem("campuse:v1:users"))).length, 0);
       assert.equal(await page.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith("campuse:v1:data:")).length), 0);
     }));

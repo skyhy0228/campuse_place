@@ -1,5 +1,8 @@
-import { Banknote, Clock, ExternalLink, MapPin, Star, ThumbsUp, Utensils } from "lucide-react";
-import type { PlaceView } from "../lib/places";
+import { ExternalLink, Star, ThumbsUp } from "lucide-react";
+import { coverFor } from "../lib/cover";
+import { useLang } from "../lib/i18n";
+import { placeText, type PlaceView } from "../lib/places";
+import { categoryIcon } from "./categoryIcon";
 import { PlaceImage } from "./PlaceImage";
 
 interface Props {
@@ -8,69 +11,66 @@ interface Props {
   open: boolean;
   onOpen: (id: string) => void;
   onToggleFavorite: (id: string) => void;
+  // 확인한날로 정렬할 때 카드에 날짜를 보여준다.
+  showChecked?: boolean;
 }
 
-export function PlaceCard({ place, favorite, open, onOpen, onToggleFavorite }: Props) {
-  const menuPreview = place.menuItems.slice(0, 3).join(", ");
-  const menuRest = place.menuItems.length - 3;
-  const cover = place.images[0];
-  // 맛집·카페는 메뉴와 가격을, 그 외(꿀팁·장소)는 설명을 더 보여준다.
-  const showFoodFacts = place.isFood;
+export function PlaceCard({ place, favorite, open, onOpen, onToggleFavorite, showChecked = false }: Props) {
+  const { lang, t } = useLang();
+  const text = placeText(place, lang);
+  const cover = coverFor(place, t, text.name);
+  const Icon = categoryIcon(place.category);
+  // 맛집·카페는 메뉴를, 그 외(꿀팁·장소)는 설명을 더 보여준다.
+  const line = place.isFood ? text.summary || text.menu.slice(0, 3).join(", ") : text.summary || text.location;
 
   return (
-    <article className="card" data-category={place.category}>
-      {cover && <PlaceImage className="cardImage" src={cover} alt={`${place.name} 사진`} />}
+    <article className="card glass" data-category={place.category}>
+      {/* 사진이 없으면 분류 색과 아이콘으로 같은 크기의 자리를 채워 카드 높이를 맞춘다. */}
+      <div className="cardMedia">
+        {cover ? (
+          <PlaceImage className="cardImage" src={cover.src} srcSet={cover.srcSet} sizes="(min-width: 1024px) 320px, 50vw" alt={cover.alt} />
+        ) : (
+          <Icon size={36} aria-hidden="true" />
+        )}
+        <span className="badge">{text.category}</span>
+      </div>
       <div className="cardBody">
-        <div className="badges">
-          <span className="badge">{place.categoryLabel}</span>
-          {open && <span className="badge open">영업 중</span>}
-          {place.isRecent && <span className="badge recent">최근 확인</span>}
-        </div>
+        {(open || place.isRecent || place.intl) && (
+          <div className="badges">
+            {open && <span className="badge open">{t.openStatus}</span>}
+            {place.isRecent && <span className="badge recent">{t.recent}</span>}
+            {place.intl && <span className="badge intl">{t.intlOnly}</span>}
+          </div>
+        )}
         {/* 제목 버튼이 카드 전체를 덮어 카드 어디를 눌러도 열린다. 접근 가능한 이름은 장소 이름 하나다. */}
         <h3 className="cardTitle">
           <button type="button" className="cardLink" onClick={() => onOpen(place.id)}>
-            {place.name}
+            {text.name}
           </button>
         </h3>
-        {place.summary && <p className={`cardSummary${showFoodFacts ? "" : " long"}`}>{place.summary}</p>}
-        <div className="cardFacts">
-          {place.location && (
-            <p className="fact">
-              <MapPin size={14} aria-hidden="true" />
-              <span>{place.location}</span>
-            </p>
-          )}
-          {showFoodFacts && menuPreview && (
-            <p className="fact">
-              <Utensils size={14} aria-hidden="true" />
-              <span>
-                {menuPreview}
-                {menuRest > 0 ? ` 외 ${menuRest}` : ""}
-              </span>
-            </p>
-          )}
-          {showFoodFacts && place.priceItems[0] && (
-            <p className="fact">
-              <Banknote size={14} aria-hidden="true" />
-              <span>{place.priceItems[0]}</span>
-            </p>
-          )}
-          {place.hoursItems[0] && (
-            <p className="fact">
-              <Clock size={14} aria-hidden="true" />
-              <span>{place.hoursItems[0]}</span>
-            </p>
-          )}
-        </div>
+        {text.nameKo && (
+          <p className="cardAlt" lang="ko">
+            {text.nameKo}
+          </p>
+        )}
+        {line && <p className={`cardSummary${place.isFood ? "" : " long"}`}>{line}</p>}
       </div>
       <div className="cardFoot">
         <span className="meta">
-          <span className="recommend" title="추천수">
-            <ThumbsUp size={14} aria-hidden="true" />
-            <span className="srOnly">추천수 </span>
+          {place.rating !== undefined && (
+            <span className="star">
+              <Star size={13} aria-hidden="true" fill="currentColor" />
+              <span className="srOnly">{t.ratingLabel} </span>
+              {place.rating.toFixed(1)}
+            </span>
+          )}
+          {place.distanceKm !== undefined && place.distanceKm > 0 && <span>{place.distanceKm}km</span>}
+          <span className="recommend" title={t.recommendations}>
+            <ThumbsUp size={13} aria-hidden="true" />
+            <span className="srOnly">{t.recommendations} </span>
             {place.recommendations}
           </span>
-          {place.checkedAt && <span className="checked">확인 {place.checkedAt}</span>}
+          {showChecked && place.checkedAt && <span className="checked">{t.checkedAt(place.checkedAt)}</span>}
         </span>
         <span className="actions">
           {place.safeMapUrl && (
@@ -79,8 +79,8 @@ export function PlaceCard({ place, favorite, open, onOpen, onToggleFavorite }: P
               href={place.safeMapUrl}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={`${place.name} 네이버 지도 열기 (새 탭)`}
-              title="네이버 지도"
+              aria-label={t.openNaver(text.name)}
+              title={t.naverMap}
             >
               <ExternalLink size={18} aria-hidden="true" />
             </a>
@@ -90,8 +90,8 @@ export function PlaceCard({ place, favorite, open, onOpen, onToggleFavorite }: P
             className={`iconButton${favorite ? " active" : ""}`}
             onClick={() => onToggleFavorite(place.id)}
             aria-pressed={favorite}
-            aria-label={favorite ? `${place.name} 즐겨찾기 해제` : `${place.name} 즐겨찾기 추가`}
-            title={favorite ? "즐겨찾기 해제" : "즐겨찾기"}
+            aria-label={favorite ? t.favRemove(text.name) : t.favAdd(text.name)}
+            title={favorite ? t.favOff : t.favOn}
           >
             <Star size={18} aria-hidden="true" fill={favorite ? "currentColor" : "none"} />
           </button>

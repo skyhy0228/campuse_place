@@ -7,6 +7,8 @@ import { useNaverMap } from "../lib/useNaverMap";
 interface Props {
   places: PlaceView[];
   favoriteIds: Set<string>;
+  // 상세의 '지도에서 보기'로 넘어온 장소. 그 위치로 옮기고 안내 창을 연다.
+  focusId?: string | null;
   onOpen: (id: string) => void;
   onToggleFavorite: (id: string) => void;
   onShowList: () => void;
@@ -34,7 +36,7 @@ function groupByCoordinate(places: PlaceView[]): PinGroup[] {
   return [...groups.values()];
 }
 
-export function PlaceMap({ places, favoriteIds, onOpen, onToggleFavorite, onShowList }: Props) {
+export function PlaceMap({ places, favoriteIds, focusId = null, onOpen, onToggleFavorite, onShowList }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { maps, map, error, retry } = useNaverMap(containerRef, CAMPUS);
   const [activeKey, setActiveKey] = useState<string | null>(null);
@@ -85,6 +87,15 @@ export function PlaceMap({ places, favoriteIds, onOpen, onToggleFavorite, onShow
       markers.forEach((marker) => marker.setMap(null));
     };
   }, [maps, map, pinKey]);
+
+  useEffect(() => {
+    if (!maps || !map || !focusId) return;
+    const group = groupsRef.current.find((g) => g.places.some((p) => p.id === focusId));
+    if (!group) return;
+    map.setCenter(new maps.LatLng(group.lat, group.lng));
+    map.setZoom(17);
+    setActiveKey(group.key);
+  }, [maps, map, focusId]);
 
   // 필터로 사라진 핀의 안내 창은 닫는다.
   useEffect(() => {

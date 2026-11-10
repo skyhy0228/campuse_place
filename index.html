@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>교통대 꿀팁 모음</title>
     <meta name="description" content="국립한국교통대학교 충주캠퍼스 학생들이 직접 모은 맛집, 숨은 장소, 생활 꿀팁을 검색하세요." />
-    <meta name="theme-color" content="#f6f4ef" />
+    <meta name="theme-color" content="#d3e5ef" />
     <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
     <link rel="apple-touch-icon" href="%BASE_URL%icons/apple-touch-icon.png" />
     <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
@@ -25,11 +25,12 @@
     <meta name="twitter:description" content="국립한국교통대학교 충주캠퍼스 학생들이 직접 모은 맛집, 숨은 장소, 생활 꿀팁" />
     <meta name="twitter:image" content="https://skyhy0228.github.io/campuse_place/og.png" />
 
-    <!-- 저장된 화면 테마를 첫 화면이 그려지기 전에 적용해 깜빡임을 막는다 -->
+    <!-- 저장된 화면 테마와 언어(한국어/中文)를 첫 화면이 그려지기 전에 적용해 깜빡임을 막는다 -->
     <script>
       try {
         var t = localStorage.getItem("campuse:theme");
         if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+        if (localStorage.getItem("campuse:lang") === "zh") document.documentElement.lang = "zh-CN";
       } catch (e) {}
     </script>
   </head>

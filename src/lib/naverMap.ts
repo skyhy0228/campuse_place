@@ -81,6 +81,8 @@ const CATEGORY_COLORS: Record<string, string> = {
   생활꿀팁: "#1c5a3a",
   관광지: "#6b5200",
   자유: "#3b4452",
+  유학생: "#9b2c1f",
+  제보: "#1f4e6b",
 };
 const GROUP_COLOR = "#1f2933";
 

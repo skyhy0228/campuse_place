@@ -18,7 +18,8 @@ const GUEST_KEY = "campuse-place:favorites:v1";
 export const accountDataKey = (userId: string) => `campuse:v1:data:${userId}`;
 export const emptyData = (): UserData => ({ favorites: [], collections: [] });
 
-const PLACE_ID = /^p[0-9a-f]{8}$/;
+// 원본 장소 p + 8자리, 승인된 학생 제보 q + 8자리
+const PLACE_ID = /^[pq][0-9a-f]{8}$/;
 const uniq = (items: string[]) => [...new Set(items)];
 
 // 저장소나 가져온 파일의 내용을 믿지 않고 형식을 걸러낸다.

@@ -71,12 +71,32 @@ describe("접근성(axe-core)", () => {
 
       test("지도 보기와 핀 묶음 안내", (t) =>
         run(async (page) => {
-          if (!(await page.locator(".viewToggle").count())) return t.skip("지도 키 없이 빌드된 dist 입니다.");
-          await page.getByRole("button", { name: "지도", exact: true }).click();
+          const nav = page.getByRole("navigation", { name: "화면 이동" }).first();
+          if (!(await nav.getByRole("button", { name: "지도", exact: true }).count())) return t.skip("지도 키 없이 빌드된 dist 입니다.");
+          await nav.getByRole("button", { name: "지도", exact: true }).click();
           await page.locator(".fakeMarker[aria-label$='곳']").first().click();
           await page.getByRole("region", { name: "선택한 위치의 장소" }).waitFor();
           await scan(page, `지도 ${scheme}`);
         }, options));
+
+      test("중국어(유학생) 모드의 목록과 상세", () =>
+        run(async (page) => {
+          await page.getByRole("button", { name: /^언어/ }).click();
+          await settle(page);
+          await scan(page, `중국어 목록 ${scheme}`);
+          await cards(page).first().locator(".cardLink").click();
+          await page.waitForSelector("dialog[open]");
+          await settle(page, 300);
+          await scan(page, `중국어 상세 ${scheme}`);
+        }, options));
+
+      test("캠퍼스 지도와 층별 안내", () =>
+        run(async (page) => {
+          await page.waitForSelector(".campusCanvas .blabel");
+          await page.locator(".leaflet-marker-icon[title='E5 테크노관']").click();
+          await page.locator(".floorList").waitFor();
+          await scan(page, `캠퍼스 ${scheme}`);
+        }, { ...options, url: "?view=campus", ready: ".campusCanvas" }));
 
       test("로그인·회원가입·비밀번호 찾기 화면", () =>
         run(async (page) => {

@@ -98,7 +98,7 @@ describe("분류·필터·정렬", () => {
       await settle(page);
       const expected = places.filter((p) => p.category === "식당").length;
       assert.equal(await cards(page).count(), expected);
-      const badges = await page.locator("article.card .badges .badge:first-child").allInnerTexts();
+      const badges = await page.locator("article.card .cardMedia .badge").allInnerTexts();
       assert.ok(badges.every((b) => b === "맛집"));
     }));
 
@@ -243,7 +243,7 @@ describe("상세 보기", () => {
       assert.match(page.url(), /#place=p[0-9a-f]{8}$/);
       assert.equal(await page.evaluate(() => document.activeElement?.getAttribute("aria-label")), "상세 닫기");
 
-      const map = page.locator("dialog a.button.primary");
+      const map = page.locator("dialog[open]").getByRole("link", { name: "네이버 지도", exact: true });
       assert.match(await map.getAttribute("href"), /^https:\/\/(naver\.me|map\.naver\.com)\//);
       assert.equal(await map.getAttribute("target"), "_blank");
       assert.match(await map.getAttribute("rel"), /noopener/);
@@ -278,6 +278,7 @@ describe("상세 보기", () => {
     await run(async (page) => {
       await page.locator("article.card").getByRole("button", { name: target.name, exact: true }).click();
       await page.waitForSelector("dialog[open]");
+      await page.getByRole("tab", { name: "정보" }).click();
       assert.equal(await page.locator("dialog .rowNote").count(), target.locationNotes.length);
     });
   });
@@ -363,7 +364,7 @@ describe("화면 테마", () => {
   test("기기의 어두운 화면 설정을 따른다", () =>
     run(async (page) => {
       const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-      assert.equal(bg, "rgb(23, 25, 28)");
+      assert.equal(bg, "rgb(13, 26, 36)");
     }, { colorScheme: "dark" }));
 });
 

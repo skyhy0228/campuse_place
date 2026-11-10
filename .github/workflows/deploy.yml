@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - run: npm ci
       - run: npm run test:unit
@@ -37,7 +37,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - run: npm ci
       - run: npm run build
@@ -45,6 +45,10 @@ jobs:
           # 저장소 Settings → Secrets and variables → Actions → Variables 에 등록한다.
           # 네이버 지도 Client ID 는 등록한 사이트 주소에서만 동작하는 공개용 값이며, 없으면 지도 기능이 숨겨진다.
           VITE_NAVER_MAP_CLIENT_ID: ${{ vars.VITE_NAVER_MAP_CLIENT_ID }}
+          # Supabase Project URL 과 publishable 키(공개용). 없으면 회원·후기·제보는 Supabase 없이 동작한다.
+          # secret / service_role 키는 여기에 넣지 않는다. 데이터 보호는 supabase/schema.sql 의 RLS 가 한다.
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

@@ -27,6 +27,44 @@ export interface Place {
   // 주소로 위치가 특정되는 항목에만 있다 (data/place-coordinates.json).
   lat?: number;
   lng?: number;
+
+  // ---- 팀원 데이터 (scripts/lib/teams.mjs) ----
+  // 교통여지도: 음식 종류와 예시 사진 키, 구역, 기본 별점, 혼밥, 휴무일, 학교에서 거리, 네이버 리뷰 키워드, 정리된 설명
+  foodType?: string;
+  foodPhoto?: string;
+  zone?: Zone;
+  baseRating?: number;
+  solo?: "good" | "ok" | "hard";
+  closedDays?: string;
+  distanceKm?: number;
+  reviewKeywords?: ReviewKeyword[];
+  review?: { summary: string; detail: string };
+  // knut 가이드: 중국어 번역과 유학생 팁
+  zh?: ZhText;
+  intl?: { ko: string; zh: string };
+  // ut 꿀팁 지도: 캠퍼스 지도 위 위치(m 단위, 왼쪽 위 원점)
+  campusXY?: { x: number; y: number; building?: string; approx?: boolean };
+  // 원본 XLSX 가 아닌 곳에서 온 항목 ('knut' 유학생 꿀팁, 'report' 학생 제보)
+  source?: "knut" | "report";
+}
+
+export type Zone = "front" | "city" | "suburb";
+
+export interface ReviewKeyword {
+  label: string;
+  count: number;
+  // '500건이 넘는다'처럼 하한만 알려진 경우
+  over?: boolean;
+}
+
+export interface ZhText {
+  name?: string;
+  location?: string;
+  menu?: string;
+  hours?: string;
+  price?: string;
+  summary?: string;
+  note?: string;
 }
 
 export interface PlacesFile {
@@ -34,7 +72,7 @@ export interface PlacesFile {
   places: Place[];
 }
 
-export type SortKey = "recommendations" | "name" | "checked";
+export type SortKey = "recommendations" | "rating" | "name" | "checked";
 
 export interface Filters {
   query: string;
@@ -45,6 +83,11 @@ export interface Filters {
   openNow: boolean;
   campus: Campus;
   price: PriceBand;
+  // 교통여지도: 구역과 음식 종류
+  zone: "" | Zone;
+  food: string;
+  // knut: 유학생 추천만
+  intl: boolean;
 }
 
 export const DEFAULT_FILTERS: Filters = {
@@ -55,4 +98,7 @@ export const DEFAULT_FILTERS: Filters = {
   openNow: false,
   campus: "",
   price: "",
+  zone: "",
+  food: "",
+  intl: false,
 };

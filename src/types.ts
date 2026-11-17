@@ -88,6 +88,8 @@ export interface Filters {
   food: string;
   // knut: 유학생 추천만
   intl: boolean;
+  // 교통여지도: 혼밥 가능(good)만
+  solo: boolean;
 }
 
 export const DEFAULT_FILTERS: Filters = {
@@ -101,4 +103,5 @@ export const DEFAULT_FILTERS: Filters = {
   zone: "",
   food: "",
   intl: false,
+  solo: false,
 };

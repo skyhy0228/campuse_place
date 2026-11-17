@@ -4,7 +4,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Footprints, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { buildingName, floorHas, type CampusData, type RoomQuery } from "../lib/campus";
+import { buildingName, busStopName, floorHas, floorItemName, routeText, type CampusData, type RoomQuery } from "../lib/campus";
 import { useLang } from "../lib/i18n";
 import { assetUrl, placeText, type PlaceView } from "../lib/places";
 import { CATEGORY_PIN_COLORS } from "./categoryIcon";
@@ -68,7 +68,7 @@ export function CampusMap({ data, places, room, focusId, onOpen }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const homeZoom = useRef(0);
-  const layers = useRef<{ markers: L.LayerGroup; route: L.LayerGroup } | null>(null);
+  const layers = useRef<{ labels: L.LayerGroup; bus: L.LayerGroup; markers: L.LayerGroup; route: L.LayerGroup } | null>(null);
   const [ready, setReady] = useState(false);
   const [panel, setPanel] = useState<Panel>(null);
   const [routeId, setRouteId] = useState<string | null>(null);
@@ -108,29 +108,8 @@ export function CampusMap({ data, places, room, focusId, onOpen }: Props) {
     map.fitBounds(home);
     homeZoom.current = map.getZoom();
 
-    // 건물 라벨: 멀리서는 번호만, 더 멀면 숨긴다.
-    const labelLayer = L.layerGroup().addTo(map);
-    for (const b of data.buildings) {
-      const marker = L.marker(ll(b.x, b.y), {
-        icon: L.divIcon({ className: "", html: `<div class="blabel"><b>${b.code}</b><span class="bn">${escapeHtml(b.name)}</span></div>`, iconSize: [80, 30], iconAnchor: [40, -6] }),
-        zIndexOffset: -500,
-        keyboard: false,
-        title: `${b.code} ${b.name}`,
-      });
-      marker.on("click", () => setPanel({ kind: "building", code: b.code }));
-      marker.addTo(labelLayer);
-    }
-    const busLayer = L.layerGroup().addTo(map);
-    for (const s of data.busStops) {
-      L.marker(ll(s.x, s.y), {
-        icon: L.divIcon({ className: "", html: '<span class="cbus" aria-hidden="true">🚏</span>', iconSize: [18, 18], iconAnchor: [9, 9] }),
-        keyboard: false,
-        interactive: true,
-        title: `${t.busStop}: ${s.name}`,
-      })
-        .bindTooltip(s.name, { direction: "top" })
-        .addTo(busLayer);
-    }
+    const labels = L.layerGroup().addTo(map);
+    const bus = L.layerGroup().addTo(map);
     const zoomClass = () => {
       const z = map.getZoom();
       container.classList.toggle("zFar", z < homeZoom.current + 0.5);
@@ -139,7 +118,7 @@ export function CampusMap({ data, places, room, focusId, onOpen }: Props) {
     map.on("zoomend", zoomClass);
     zoomClass();
 
-    layers.current = { markers: L.layerGroup().addTo(map), route: L.layerGroup().addTo(map) };
+    layers.current = { labels, bus, markers: L.layerGroup().addTo(map), route: L.layerGroup().addTo(map) };
     map.on("click", () => setPanel(null));
     const observer = new ResizeObserver(() => map.invalidateSize());
     observer.observe(container);
@@ -154,6 +133,37 @@ export function CampusMap({ data, places, room, focusId, onOpen }: Props) {
     };
     // 지도는 데이터가 바뀌지 않는 한 다시 만들지 않는다.
   }, [data]);
+
+  // 건물 라벨·버스 정류장은 언어 전환에 따라 다시 그린다.
+  useEffect(() => {
+    const labelLayer = layers.current?.labels;
+    const busLayer = layers.current?.bus;
+    if (!ready || !labelLayer || !busLayer) return;
+    labelLayer.clearLayers();
+    for (const b of data.buildings) {
+      const label = buildingName(data, b.code, lang);
+      const marker = L.marker(ll(b.x, b.y), {
+        icon: L.divIcon({ className: "", html: `<div class="blabel"><b>${b.code}</b><span class="bn">${escapeHtml(label)}</span></div>`, iconSize: [80, 30], iconAnchor: [40, -6] }),
+        zIndexOffset: -500,
+        keyboard: false,
+        title: `${b.code} ${label}`,
+      });
+      marker.on("click", () => setPanel({ kind: "building", code: b.code }));
+      marker.addTo(labelLayer);
+    }
+    busLayer.clearLayers();
+    for (const s of data.busStops) {
+      const stop = busStopName(data, s.name, lang);
+      L.marker(ll(s.x, s.y), {
+        icon: L.divIcon({ className: "", html: '<span class="cbus" aria-hidden="true">🚏</span>', iconSize: [18, 18], iconAnchor: [9, 9] }),
+        keyboard: false,
+        interactive: true,
+        title: `${t.busStop}: ${stop}`,
+      })
+        .bindTooltip(stop, { direction: "top" })
+        .addTo(busLayer);
+    }
+  }, [ready, data, lang, t]);
 
   // 장소 핀
   const selectedBuilding = room?.code ?? (panel?.kind === "building" ? panel.code : null);
@@ -172,7 +182,7 @@ export function CampusMap({ data, places, room, focusId, onOpen }: Props) {
         icon: L.divIcon({ className: "", html, iconSize: [34, 34], iconAnchor: [17, 40] }),
         riseOnHover: true,
         zIndexOffset: selected ? 900 : count * 5,
-        title: count > 1 ? `${group.building ? buildingName(data, group.building) : first} · ${t.pinGroup(count)}` : first,
+        title: count > 1 ? `${group.building ? buildingName(data, group.building, lang) : first} · ${t.pinGroup(count)}` : first,
         alt: count > 1 ? t.pinGroup(count) : first,
       });
       marker.on("click", () => {
@@ -216,12 +226,12 @@ export function CampusMap({ data, places, room, focusId, onOpen }: Props) {
     route.stops.forEach((s, i) => {
       L.marker(ll(s.x, s.y), {
         icon: L.divIcon({ className: "", html: `<span class="routeStop" style="--c:${route.color}">${i + 1}</span>`, iconSize: [22, 22], iconAnchor: [11, 11] }),
-        title: `${i + 1}. ${s.name}`,
+        title: `${i + 1}. ${buildingName(data, s.code, lang)}`,
         keyboard: false,
       }).addTo(layer);
     });
     map.fitBounds(L.latLngBounds(line).pad(0.25));
-  }, [ready, route]);
+  }, [ready, route, lang, data]);
 
   // 필터로 사라진 묶음의 안내 창은 닫는다.
   useEffect(() => {
@@ -241,9 +251,9 @@ export function CampusMap({ data, places, room, focusId, onOpen }: Props) {
       <div className="mapCanvasWrap">
         <div ref={containerRef} className="campusCanvas" role="application" aria-label={t.campusMapLabel} />
         {panel && (
-          <div className="pinPanel" role="region" aria-label={panel.kind === "building" ? buildingName(data, panel.code) : t.pinGroup(panelPlaces.length)} onKeyDown={(e) => e.key === "Escape" && setPanel(null)}>
+          <div className="pinPanel" role="region" aria-label={panel.kind === "building" ? buildingName(data, panel.code, lang) : t.pinGroup(panelPlaces.length)} onKeyDown={(e) => e.key === "Escape" && setPanel(null)}>
             <div className="pinPanelHead">
-              <h2>{panel.kind === "building" ? `${panel.code} ${buildingName(data, panel.code)}` : t.pinGroup(panelPlaces.length)}</h2>
+              <h2>{panel.kind === "building" ? `${panel.code} ${buildingName(data, panel.code, lang)}` : t.pinGroup(panelPlaces.length)}</h2>
               <button type="button" className="iconButton" onClick={() => setPanel(null)} aria-label={t.closePanel}>
                 <X size={18} aria-hidden="true" />
               </button>
@@ -257,7 +267,7 @@ export function CampusMap({ data, places, room, focusId, onOpen }: Props) {
                       {floorInfo.floors.map(([floor, names]) => (
                         <li key={floor} className={room?.floor && room.code === panel.code && floorHas(floor, room.floor) ? "hit" : undefined}>
                           <b>{t.floorN(floor)}</b>
-                          <span lang="ko">{names.join(", ")}</span>
+                          <span lang={lang === "ko" ? "ko" : undefined}>{names.map((n) => floorItemName(data, n, lang)).join(", ")}</span>
                         </li>
                       ))}
                     </ul>
@@ -298,30 +308,33 @@ export function CampusMap({ data, places, room, focusId, onOpen }: Props) {
         <h2 id="routesTitle" className="blockTitle">
           <Footprints size={18} aria-hidden="true" /> {t.routes}
         </h2>
-        {data.routes.map((r) => (
-          <button
-            key={r.id}
-            type="button"
-            className="routeItem"
-            style={{ "--c": r.color } as CSSProperties}
-            aria-pressed={routeId === r.id}
-            onClick={() => setRouteId(routeId === r.id ? null : r.id)}
-          >
-            <span className="swatch" aria-hidden="true" />
-            <span>
-              <strong lang="ko">{r.title}</strong>
-              <span lang="ko">{r.stops.map((s) => s.name).join(" → ")}</span>
-              <br />
-              <span>{t.routeWalk(r.meters, Math.max(1, Math.round(r.meters / 70)))}</span>
-              {routeId === r.id && (
-                <>
-                  <br />
-                  <span lang="ko">{r.desc}</span>
-                </>
-              )}
-            </span>
-          </button>
-        ))}
+        {data.routes.map((r) => {
+          const rt = routeText(data, r, lang);
+          return (
+            <button
+              key={r.id}
+              type="button"
+              className="routeItem"
+              style={{ "--c": r.color } as CSSProperties}
+              aria-pressed={routeId === r.id}
+              onClick={() => setRouteId(routeId === r.id ? null : r.id)}
+            >
+              <span className="swatch" aria-hidden="true" />
+              <span>
+                <strong lang={lang === "ko" ? "ko" : undefined}>{rt.title}</strong>
+                <span lang={lang === "ko" ? "ko" : undefined}>{r.stops.map((s) => buildingName(data, s.code, lang)).join(" → ")}</span>
+                <br />
+                <span>{t.routeWalk(r.meters, Math.max(1, Math.round(r.meters / 70)))}</span>
+                {routeId === r.id && (
+                  <>
+                    <br />
+                    <span lang={lang === "ko" ? "ko" : undefined}>{rt.desc}</span>
+                  </>
+                )}
+              </span>
+            </button>
+          );
+        })}
       </section>
     </section>
   );

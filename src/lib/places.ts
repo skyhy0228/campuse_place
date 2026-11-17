@@ -218,6 +218,7 @@ export function sortPlaces(places: PlaceView[], key: SortKey) {
 }
 
 export const isIntl = (place: PlaceView) => Boolean(place.intl) || place.category === "유학생";
+export const isSolo = (place: PlaceView) => place.solo === "good";
 
 // 분류·검색어 이외의 조건. 음식 칩의 개수를 셀 때도 쓴다.
 export function passesFilters(place: PlaceView, filters: Filters, listIds: Set<string> | null, now: Date) {
@@ -228,6 +229,7 @@ export function passesFilters(place: PlaceView, filters: Filters, listIds: Set<s
     (!filters.price || place.priceBand === filters.price) &&
     (!filters.zone || place.zone === filters.zone) &&
     (!filters.intl || isIntl(place)) &&
+    (!filters.solo || isSolo(place)) &&
     (!filters.openNow || openStatus(place.schedule, now) === "open")
   );
 }

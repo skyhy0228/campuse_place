@@ -22,6 +22,7 @@ interface Props {
   openableCount: number;
   hasZones: boolean;
   hasIntl: boolean;
+  hasSolo: boolean;
 }
 
 const FOOD_CATEGORIES = ["", "식당", "카페"];
@@ -58,7 +59,8 @@ export function Controls(props: Props) {
   const foodContext = FOOD_CATEGORIES.includes(filters.category);
   // 음식 칩은 지금 조건에서 결과가 있는 종류만 보여준다. (고른 칩은 0개여도 남겨 해제할 수 있게 한다)
   const foods = Object.keys(t.foodNames).filter((key) => (foodCounts.get(key) ?? 0) > 0 || filters.food === key);
-  const advancedCount = (filters.openNow ? 1 : 0) + (filters.campus ? 1 : 0) + (filters.price ? 1 : 0) + (filters.intl ? 1 : 0);
+  const advancedCount =
+    (filters.openNow ? 1 : 0) + (filters.campus ? 1 : 0) + (filters.price ? 1 : 0) + (filters.intl ? 1 : 0) + (filters.solo ? 1 : 0);
 
   return (
     <section className="controls" aria-label={`${t.categoryGroup} · ${t.filter} · ${t.sort}`}>
@@ -186,6 +188,13 @@ export function Controls(props: Props) {
             <div className="filterItem">
               <button type="button" className="chip" aria-pressed={filters.intl} onClick={() => patch({ intl: !filters.intl })}>
                 {t.intlOnly}
+              </button>
+            </div>
+          )}
+          {props.hasSolo && (
+            <div className="filterItem">
+              <button type="button" className="chip" aria-pressed={filters.solo} onClick={() => patch({ solo: !filters.solo })}>
+                {t.soloOnly}
               </button>
             </div>
           )}

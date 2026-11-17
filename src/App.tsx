@@ -25,6 +25,7 @@ import {
   buildCategories,
   filterPlaces,
   isIntl,
+  isSolo,
   loadPlaces,
   matchesQuery,
   passesFilters,
@@ -67,7 +68,7 @@ function Main() {
   const [filters, setFilters] = useState<Filters>(() => filtersFromSearch(location.search));
   const [filterPanelOpen, setFilterPanelOpen] = useState(() => {
     const f = filtersFromSearch(location.search);
-    return f.openNow || Boolean(f.campus) || Boolean(f.price) || f.intl;
+    return f.openNow || Boolean(f.campus) || Boolean(f.price) || f.intl || f.solo;
   });
   const [view, setView] = useState<View>(() => viewFromSearch(location.search));
   const [selectedId, setSelectedId] = useState<string | null>(parseHash);
@@ -326,6 +327,7 @@ function Main() {
             openableCount={openableCount}
             hasZones={places.some((p) => p.zone)}
             hasIntl={places.some(isIntl)}
+            hasSolo={places.some(isSolo)}
           />
         )}
 

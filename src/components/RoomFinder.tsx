@@ -1,5 +1,5 @@
 import { School } from "lucide-react";
-import { buildingName, floorHas, searchDepartments, type CampusData, type RoomQuery } from "../lib/campus";
+import { buildingName, floorHas, floorItemName, searchDepartments, type CampusData, type RoomQuery } from "../lib/campus";
 import { useLang } from "../lib/i18n";
 
 interface Props {
@@ -11,12 +11,14 @@ interface Props {
 
 // 검색어가 강의실('테크노관 213', 'E5-213')이나 학과 이름이면 건물과 층을 바로 알려준다.
 export function RoomFinder({ data, query, room, onShowCampus }: Props) {
-  const { t } = useLang();
-  const departments = room ? [] : searchDepartments(query, data);
+  const { lang, t } = useLang();
+  const departments = room ? [] : searchDepartments(query, data, lang);
   if (!room && !departments.length) return null;
 
   const floorNames = room?.floor
-    ? (data.floors?.buildings[room.code]?.floors.filter(([f]) => floorHas(f, room.floor!)).flatMap(([, names]) => names) ?? [])
+    ? (data.floors?.buildings[room.code]?.floors
+        .filter(([f]) => floorHas(f, room.floor!))
+        .flatMap(([, names]) => names.map((n) => floorItemName(data, n, lang))) ?? [])
     : [];
 
   return (
@@ -24,11 +26,11 @@ export function RoomFinder({ data, query, room, onShowCampus }: Props) {
       <h2 id="roomTitle">
         <School size={16} aria-hidden="true" />{" "}
         {room
-          ? t.roomResult(`${room.code} ${buildingName(data, room.code)}`, room.floor ? t.floorN(room.floor) : "")
+          ? t.roomResult(`${room.code} ${buildingName(data, room.code, lang)}`, room.floor ? t.floorN(room.floor) : "")
           : t.deptResult}
       </h2>
       {room?.floor && floorNames.length > 0 && (
-        <p className="hint" lang="ko">
+        <p className="hint" lang={lang === "ko" ? "ko" : undefined}>
           {floorNames.join(", ")}
         </p>
       )}
@@ -39,7 +41,7 @@ export function RoomFinder({ data, query, room, onShowCampus }: Props) {
               <b>
                 {d.code} {t.floorN(d.floor)}
               </b>
-              <span lang="ko">
+              <span lang={lang === "ko" ? "ko" : undefined}>
                 {d.name} · {d.building}
               </span>
             </li>

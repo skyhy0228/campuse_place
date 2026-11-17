@@ -29,6 +29,7 @@ export function filtersFromSearch(search: string): Filters {
     zone: pick(params.get("zone"), ZONES, ""),
     food: (params.get("food") ?? "").replace(/[^a-z-]/g, "").slice(0, 20),
     intl: params.get("intl") === "1",
+    solo: params.get("solo") === "1",
   };
 }
 
@@ -45,6 +46,7 @@ export function filtersToSearch(filters: Filters, view: View = "list"): string {
   if (filters.zone) params.set("zone", filters.zone);
   if (filters.food) params.set("food", filters.food);
   if (filters.intl) params.set("intl", "1");
+  if (filters.solo) params.set("solo", "1");
   if (view !== "list") params.set("view", view);
   const text = params.toString();
   return text ? `?${text}` : "";

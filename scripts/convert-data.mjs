@@ -30,6 +30,8 @@ const imageMapPath = path.join(root, "data", "place-images.json");
 const coordsPath = path.join(root, "data", "place-coordinates.json");
 const teamsDir = path.join(root, "data", "teams");
 const teamAliasPath = path.join(root, "data", "team-aliases.json");
+const zhPlacesPath = path.join(root, "data", "zh-places.json");
+const zhCampusPath = path.join(root, "data", "zh-campus.json");
 const outDir = path.join(root, "public", "data");
 const outPath = path.join(outDir, "places.json");
 const SHEET = "정규화데이터";
@@ -96,6 +98,8 @@ function main() {
     return fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : null;
   };
   const teamAliases = fs.existsSync(teamAliasPath) ? JSON.parse(fs.readFileSync(teamAliasPath, "utf8")) : {};
+  const zhPlaces = fs.existsSync(zhPlacesPath) ? JSON.parse(fs.readFileSync(zhPlacesPath, "utf8")) : {};
+  const zhCampus = fs.existsSync(zhCampusPath) ? JSON.parse(fs.readFileSync(zhCampusPath, "utf8")) : null;
   const gyotong = readTeam("gyotong.json");
   const knut = readTeam("knut.json");
   const campus = readTeam("campus.json");
@@ -122,6 +126,7 @@ function main() {
     gyotong: 0,
     keywords: 0,
     knut: 0,
+    zhExtra: 0,
     campus: 0,
     food: 0,
   };
@@ -240,6 +245,10 @@ function main() {
       Object.assign(place, knutFields(k));
       report.knut += 1;
     }
+    if (!place.zh && zhPlaces[place.id]) {
+      place.zh = zhPlaces[place.id];
+      report.zhExtra += 1;
+    }
     const position = campusPosition(u, coord);
     if (position) {
       place.campusXY = position;
@@ -294,6 +303,7 @@ function main() {
       busStops: campus.busStops,
       routes: campus.routes.map(({ id, title, color, via, desc, line, meters, stops }) => ({ id, title, color, via, desc, line, meters, stops })),
       floors: floors ?? null,
+      ...(zhCampus ? { zh: zhCampus } : {}),
     };
     fs.writeFileSync(path.join(outDir, "campus.json"), JSON.stringify(campusOut) + "\n", "utf8");
   }
@@ -314,7 +324,7 @@ function main() {
   console.log("--- 팀원 데이터 ---");
   const unmatched = (m) => m.unmatched().map((e) => e.name);
   console.log(`교통여지도 연결: ${report.gyotong}곳 (리뷰 키워드 ${report.keywords}곳), 못 찾음: ${unmatched(gyotongMatcher).join(", ") || "없음"}`);
-  console.log(`knut 중국어 연결: ${report.knut}곳, 못 찾음: ${unmatched(knutMatcher).join(", ") || "없음"}`);
+  console.log(`knut 중국어 연결: ${report.knut}곳 (보충 번역 ${report.zhExtra}곳), 못 찾음: ${unmatched(knutMatcher).join(", ") || "없음"}`);
   console.log(`캠퍼스 지도 위치: ${report.campus}곳, ut 항목 중 못 찾음 ${unmatched(campusMatcher).length}개 (--verbose 로 목록 보기)`);
   console.log(`음식 종류 분류: ${report.food}곳`);
   if (process.argv.includes("--verbose")) {

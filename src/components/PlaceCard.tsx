@@ -35,11 +35,12 @@ export function PlaceCard({ place, favorite, open, onOpen, onToggleFavorite, sho
         <span className="badge">{text.category}</span>
       </div>
       <div className="cardBody">
-        {(open || place.isRecent || place.intl) && (
+        {(open || place.isRecent || place.intl || place.solo === "good") && (
           <div className="badges">
             {open && <span className="badge open">{t.openStatus}</span>}
             {place.isRecent && <span className="badge recent">{t.recent}</span>}
             {place.intl && <span className="badge intl">{t.intlOnly}</span>}
+            {place.solo === "good" && <span className="badge solo">{t.soloBadge}</span>}
           </div>
         )}
         {/* 제목 버튼이 카드 전체를 덮어 카드 어디를 눌러도 열린다. 접근 가능한 이름은 장소 이름 하나다. */}

@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { test } from "node:test";
-import { aliasTable, floorHas, parseRoomQuery, searchDepartments } from "../../src/lib/campus.ts";
+import { aliasTable, buildingName, floorHas, parseRoomQuery, searchDepartments } from "../../src/lib/campus.ts";
 
 const data = JSON.parse(fs.readFileSync(new URL("../../public/data/campus.json", import.meta.url), "utf8"));
 
@@ -40,4 +40,13 @@ test("searchDepartments: 학과 이름으로 건물과 층을 찾는다", () => 
   assert.ok(found.length >= 1);
   assert.equal(found[0].code, "E5");
   assert.deepEqual(searchDepartments("ㄱ", data), []);
+});
+
+test("중국어 건물·강의실·학과 검색을 지원한다", () => {
+  assert.deepEqual(parseRoomQuery("图书馆 301", data), { code: "W20", room: "301", floor: "3" });
+  assert.deepEqual(parseRoomQuery("科技馆 213", data), { code: "E5", room: "213", floor: "2" });
+  assert.equal(buildingName(data, "E5", "zh"), "科技馆 (Techno馆)");
+  const found = searchDepartments("计算机", data, "zh");
+  assert.ok(found.length >= 1);
+  assert.equal(found[0].code, "W18");
 });

@@ -25,6 +25,8 @@
   --open-fg: #14532d;
   --recent-bg: #e0ecfb;
   --recent-fg: #1c4a85;
+  --solo-bg: #e8e2f6;
+  --solo-fg: #4c3a8f;
   --shadow: rgb(12 26 36 / 0.16);
   --scrim: rgb(12 26 36 / 0.32);
   --glass-a: rgb(255 255 255 / 0.66);
@@ -92,6 +94,8 @@
     --open-fg: #a8e6c0;
     --recent-bg: #1d3556;
     --recent-fg: #b4d2fb;
+    --solo-bg: #2a244b;
+    --solo-fg: #d4cbff;
     --shadow: rgb(0 0 0 / 0.5);
     --scrim: rgb(0 0 0 / 0.55);
     --glass-a: rgb(20 36 48 / 0.72);
@@ -518,6 +522,7 @@ select {
 .badge.open { background: var(--open-bg); color: var(--open-fg); }
 .badge.recent { background: var(--recent-bg); color: var(--recent-fg); }
 .badge.intl { background: var(--accent-soft); color: var(--accent-strong); }
+.badge.solo { background: var(--solo-bg); color: var(--solo-fg); }
 :root:not([data-theme="dark"]) .badge.intl { color: var(--accent-strong); }
 .cardFoot { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 4px; padding: 2px 6px 6px 14px; }
 .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; font-size: 0.8rem; color: var(--muted); min-width: 0; }

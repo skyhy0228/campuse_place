@@ -167,6 +167,7 @@ export function PlaceDialog({ place, favorite, open, onClose, onToggleFavorite, 
             {open && <span className="badge open">{t.openStatus}</span>}
             {place.isRecent && <span className="badge recent">{t.recent}</span>}
             {place.intl && <span className="badge intl">{t.intlOnly}</span>}
+            {place.solo === "good" && <span className="badge solo">{t.soloBadge}</span>}
             {place.source === "report" && <span className="badge">{t.reportFromMember}</span>}
           </div>
           <div className="titleRow">

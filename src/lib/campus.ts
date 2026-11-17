@@ -30,12 +30,20 @@ export interface FloorInfo {
   aliases?: string[];
 }
 
+export interface CampusZh {
+  buildings?: Record<string, { name: string; aliases?: string[] }>;
+  routes?: Record<string, { title: string; desc: string }>;
+  busStops?: Record<string, string>;
+  floors?: Record<string, string>;
+}
+
 export interface CampusData {
   size: { w: number; h: number };
   buildings: Building[];
   busStops: { name: string; x: number; y: number }[];
   routes: Route[];
   floors: { checked: string; source: string; url: string; buildings: Record<string, FloorInfo> } | null;
+  zh?: CampusZh;
 }
 
 // 건물 이름 → 코드 표. 긴 이름부터 맞춰 본다. ('스마트ICT관'이 'ICT관'보다 먼저)
@@ -51,6 +59,10 @@ export function aliasTable(data: CampusData): { key: string; code: string }[] {
   for (const [code, info] of Object.entries(data.floors?.buildings ?? {})) {
     add(info.name, code);
     for (const alias of info.aliases ?? []) add(alias, code);
+  }
+  for (const [code, zh] of Object.entries(data.zh?.buildings ?? {})) {
+    add(zh.name, code);
+    for (const alias of zh.aliases ?? []) add(alias, code);
   }
   return [...table].map(([key, code]) => ({ key, code })).sort((a, b) => b.key.length - a.key.length);
 }
@@ -99,15 +111,29 @@ export function floorHas(key: string, floor: string) {
   return key === floor;
 }
 
-// 학과·시설 이름으로 건물과 층을 찾는다. (최대 8개)
-export function searchDepartments(query: string, data: CampusData) {
+export const floorItemName = (data: CampusData, name: string, lang: "ko" | "zh" = "ko") =>
+  lang === "zh" ? (data.zh?.floors?.[name] ?? name) : name;
+
+export const busStopName = (data: CampusData, name: string, lang: "ko" | "zh" = "ko") =>
+  lang === "zh" ? (data.zh?.busStops?.[name] ?? name) : name;
+
+export const routeText = (data: CampusData, route: Route, lang: "ko" | "zh" = "ko") =>
+  lang === "zh" && data.zh?.routes?.[route.id] ? data.zh.routes[route.id] : { title: route.title, desc: route.desc };
+
+// 학과·시설 이름으로 건물과 층을 찾는다. (최대 8개, 한국어·중국어 모두 검색)
+export function searchDepartments(query: string, data: CampusData, lang: "ko" | "zh" = "ko") {
   const q = query.replace(/\s/g, "").toLowerCase();
   if (q.length < 2 || !data.floors) return [];
   const found: { code: string; building: string; floor: string; name: string }[] = [];
   for (const [code, info] of Object.entries(data.floors.buildings)) {
     for (const [floor, names] of info.floors) {
       for (const name of names) {
-        if (name.replace(/\s/g, "").toLowerCase().includes(q)) found.push({ code, building: info.name, floor, name });
+        const zhName = data.zh?.floors?.[name] ?? "";
+        const matchKo = name.replace(/\s/g, "").toLowerCase().includes(q);
+        const matchZh = zhName && zhName.replace(/\s/g, "").toLowerCase().includes(q);
+        if (matchKo || matchZh) {
+          found.push({ code, building: buildingName(data, code, lang), floor, name: floorItemName(data, name, lang) });
+        }
         if (found.length >= 8) return found;
       }
     }
@@ -115,8 +141,10 @@ export function searchDepartments(query: string, data: CampusData) {
   return found;
 }
 
-export const buildingName = (data: CampusData, code: string) =>
-  data.floors?.buildings[code]?.name ?? data.buildings.find((b) => b.code === code)?.name ?? code;
+export const buildingName = (data: CampusData, code: string, lang: "ko" | "zh" = "ko") => {
+  if (lang === "zh" && data.zh?.buildings?.[code]?.name) return data.zh.buildings[code].name;
+  return data.floors?.buildings[code]?.name ?? data.buildings.find((b) => b.code === code)?.name ?? code;
+};
 
 // 위도·경도 → 캠퍼스 지도 좌표 (scripts/lib/teams.mjs 의 toCampusXY 와 같은 식). 지도 범위 밖이면 null.
 const BOUNDS = { minLat: 36.9585, maxLat: 36.9765, minLng: 127.8635 };

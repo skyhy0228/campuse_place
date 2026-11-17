@@ -51,6 +51,38 @@ describe("중국어(유학생) 모드", () => {
       await settle(page);
       assert.equal(await resultCount(page), places.filter((p) => p.intl || p.category === "유학생").length);
     }));
+
+  test("생활꿀팁·자유 정보까지 100% 중국어로 검색·표시되고, 캠퍼스 지도도 중국어로 바뀐다", () =>
+    run(async (page) => {
+      assert.ok(places.every((p) => p.zh?.name));
+      await page.getByRole("button", { name: /^언어/ }).click();
+      await settle(page);
+      await page.fill("#search", "3D 打印机");
+      await settle(page);
+      assert.ok((await resultCount(page)) >= 1);
+      await page.fill("#search", "图书馆 301");
+      const card = page.locator(".roomCard");
+      await card.waitFor();
+      assert.match(await card.locator("h2").innerText(), /W20 中央图书馆/);
+      await card.getByRole("button", { name: "在校园地图上查看" }).click();
+      await page.waitForSelector(".campusCanvas .blabel");
+      assert.ok(await page.locator(".leaflet-marker-icon[title='E5 科技馆 (Techno馆)']").count());
+    }));
+
+  test("혼밥 가능 필터와 카드 배지가 동작하고 URL에 유지된다", () =>
+    run(async (page) => {
+      const expected = places.filter((p) => p.solo === "good").length;
+      await page.getByRole("button", { name: /^필터/ }).click();
+      await page.getByRole("group", { name: "추가 필터" }).getByRole("button", { name: "혼밥 가능" }).click();
+      await settle(page);
+      assert.equal(await resultCount(page), expected);
+      assert.match(page.url(), /[?&]solo=1/);
+      assert.ok((await cards(page).first().locator(".badge.solo").count()) === 1);
+
+      await page.reload();
+      await page.waitForSelector("article.card");
+      assert.equal(await resultCount(page), expected);
+    }));
 });
 
 describe("교통여지도: 음식 종류와 리뷰 키워드", () => {

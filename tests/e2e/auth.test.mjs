@@ -266,11 +266,11 @@ describe("비밀번호 찾기", () => {
       await headerButton(page).click();
       await page.getByRole("button", { name: "비밀번호를 잊으셨나요?" }).click();
       await page.getByLabel("아이디", { exact: true }).fill("nobody99");
-      await page.getByRole("button", { name: "다음" }).click();
+      await page.getByRole("button", { name: "다음", exact: true }).click();
       assert.match(await alertText(page), /찾을 수 없습니다/);
 
       await page.getByLabel("아이디", { exact: true }).fill("tester01");
-      await page.getByRole("button", { name: "다음" }).click();
+      await page.getByRole("button", { name: "다음", exact: true }).click();
       assert.match(await dialog(page).innerText(), /초등학교 때 가장 친했던 친구의 이름은\?/);
       assert.ok(!(await dialog(page).innerText()).includes(PASSWORD));
 

@@ -71,7 +71,7 @@ export const NAVER_MAPS_URL = /^https:\/\/oapi\.map\.naver\.com\//;
 // 새 브라우저 컨텍스트에서 테스트 본문을 실행하고, 끝나면 콘솔 오류가 없었는지 확인한다.
 export async function withPage(browser, fn, options = {}) {
   // ready: 첫 화면이 준비됐다고 볼 요소 (캠퍼스 지도처럼 카드가 없는 화면으로 바로 열 때 바꾼다)
-  const { viewport = { width: 1440, height: 900 }, url = "", serviceWorkers = "block", checkErrors = true, clock, ready = "article.card", ...rest } = options;
+  const { viewport = { width: 1440, height: 900 }, url = "", serviceWorkers = "block", checkErrors = true, clock, ready = "article.card", beforeGoto, ...rest } = options;
   const context = await browser.newContext({ viewport, locale: "ko-KR", serviceWorkers, permissions: ["clipboard-read", "clipboard-write"], ...rest });
   await context.route(NAVER_MAPS_URL, (route) => route.fulfill({ contentType: "text/javascript", body: FAKE_NAVER_MAPS }));
   const page = await context.newPage();
@@ -82,6 +82,8 @@ export async function withPage(browser, fn, options = {}) {
   try {
     // clock: 접속 시각을 고정한다. (영업 중 판단 테스트용)
     if (clock) await page.clock.setFixedTime(clock);
+    // beforeGoto: 페이지를 열기 전에 스크립트를 심는다. (브라우저 알림 가로채기 등)
+    if (beforeGoto) await beforeGoto(page);
     await page.goto(BASE + url);
     await page.waitForSelector(ready);
     await fn(page, context);

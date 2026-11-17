@@ -1,5 +1,6 @@
 import type { Filters, Place, PlacesFile, SortKey } from "../types";
 import { toChoseong, isChoseongQuery } from "./choseong";
+import { sortByDistance, type LatLng } from "./geo";
 import { openStatus } from "./hours";
 import { DICTS, type Lang } from "./i18n";
 
@@ -194,8 +195,12 @@ export function matchesQuery(place: PlaceView, query: string) {
 
 const byName = (a: PlaceView, b: PlaceView) => a.name.localeCompare(b.name, "ko");
 
-export function sortPlaces(places: PlaceView[], key: SortKey) {
+const byRecommend = (a: PlaceView, b: PlaceView) => b.recommendations - a.recommendations || byName(a, b);
+
+// origin: 내 위치. 'distance' 정렬인데 위치가 없으면 추천수 순으로 둔다.
+export function sortPlaces(places: PlaceView[], key: SortKey, origin: LatLng | null = null) {
   const sorted = [...places];
+  if (key === "distance") return origin ? sortByDistance(sorted, origin, byRecommend) : sorted.sort(byRecommend);
   if (key === "name") return sorted.sort(byName);
   if (key === "rating") {
     // 별점이 없는 항목은 맨 뒤로 보낸다.
@@ -214,7 +219,7 @@ export function sortPlaces(places: PlaceView[], key: SortKey) {
       return b.recommendations - a.recommendations || byName(a, b);
     });
   }
-  return sorted.sort((a, b) => b.recommendations - a.recommendations || byName(a, b));
+  return sorted.sort(byRecommend);
 }
 
 export const isIntl = (place: PlaceView) => Boolean(place.intl) || place.category === "유학생";
@@ -233,12 +238,12 @@ export function passesFilters(place: PlaceView, filters: Filters, listIds: Set<s
 }
 
 // listIds: 선택한 내 목록(즐겨찾기·컬렉션)에 담긴 장소 ID. 목록을 고르지 않았으면 null.
-export function filterPlaces(places: PlaceView[], filters: Filters, listIds: Set<string> | null, now: Date) {
+export function filterPlaces(places: PlaceView[], filters: Filters, listIds: Set<string> | null, now: Date, origin: LatLng | null = null) {
   const filtered = places.filter(
     (place) =>
       passesFilters(place, filters, listIds, now) &&
       (!filters.food || place.foodType === filters.food) &&
       matchesQuery(place, filters.query),
   );
-  return sortPlaces(filtered, filters.sort);
+  return sortPlaces(filtered, filters.sort, origin);
 }

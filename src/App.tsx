@@ -1,7 +1,8 @@
-import { Map as MapIcon, MapPin, RotateCcw, School, Search, SearchX, TriangleAlert, UserRound, House, X } from "lucide-react";
+import { BusFront, Map as MapIcon, MapPin, RotateCcw, School, Search, SearchX, TriangleAlert, UserRound, House, X } from "lucide-react";
 import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { AccountDialog } from "./components/AccountDialog";
 import { AuthDialog } from "./components/AuthDialog";
+import { BusAlarmToasts, BusPage, NextBusCard } from "./components/BusPage";
 import { CloudAuthDialog } from "./components/CloudAuthDialog";
 import { Controls } from "./components/Controls";
 import { HomeTiles } from "./components/HomeTiles";
@@ -17,6 +18,10 @@ import { TabBar } from "./components/TabBar";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { aliasTable, parseRoomQuery } from "./lib/campus";
 import { useCampusData } from "./lib/campusData";
+import { kst, toMinutes } from "./lib/bus";
+import { useBusAlarms } from "./lib/busAlarms";
+import { useBusData } from "./lib/busData";
+import { distanceFrom } from "./lib/geo";
 import { openStatus } from "./lib/hours";
 import { LangProvider, useLang } from "./lib/i18n";
 import { isLocated, mapEnabled } from "./lib/naverMap";
@@ -39,6 +44,7 @@ import { submissionToPlace } from "./lib/submissionPlace";
 import { supabaseEnabled } from "./lib/supabase";
 import { filtersFromSearch, filtersToSearch, viewFromSearch, type View } from "./lib/urlState";
 import { useGlassSheen } from "./lib/useGlassSheen";
+import { useMyLocation } from "./lib/useMyLocation";
 import { DEFAULT_FILTERS, type Filters } from "./types";
 
 // 캠퍼스 지도(Leaflet)와 관리자 화면은 열 때 따로 불러온다.
@@ -76,6 +82,19 @@ function Main() {
   const [now, setNow] = useState(() => new Date());
   const deferredQuery = useDeferredValue(filters.query);
   const patch = useCallback((change: Partial<Filters>) => setFilters((f) => ({ ...f, ...change })), []);
+  // 가까운 순을 고를 때 처음 한 번만 위치를 묻는다.
+  const geo = useMyLocation(filters.sort === "distance");
+  // 버스 시간표(작은 정적 파일)와 다음 버스 알림. 알림은 어느 화면에 있든 울린다.
+  const bus = useBusData();
+  const busAlarms = useBusAlarms((alarm) => {
+    const route = bus.data?.routes.find((r) => r.id === alarm.routeId);
+    const left = Math.round((toMinutes(alarm.time) * 60 - kst(new Date()).seconds) / 60);
+    return {
+      title: t.busAlarmFireTitle(route ? (t.busRoutes[route.id] ?? route.number) : alarm.routeId, alarm.time),
+      body: t.busAlarmFireBody(route?.stops[alarm.stop] ?? "", left),
+    };
+  });
+  const origin = filters.sort === "distance" ? geo.position : null;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -171,8 +190,8 @@ function Main() {
   }, [filters.list, favoriteIds, collections]);
 
   const visible = useMemo(
-    () => (places ? filterPlaces(places, { ...filters, query: deferredQuery }, listIds, now) : []),
-    [places, filters, deferredQuery, listIds, now],
+    () => (places ? filterPlaces(places, { ...filters, query: deferredQuery }, listIds, now, origin) : []),
+    [places, filters, deferredQuery, listIds, now, origin],
   );
 
   // 음식 칩 개수: 음식 종류를 뺀 나머지 조건으로 센다.
@@ -196,10 +215,22 @@ function Main() {
 
   // 캠퍼스 지도에서 강의실을 찾으면 검색어로 장소를 거르지 않고, 다른 조건에 맞는 핀을 그대로 보여준다.
   const campusPlaces = useMemo(
-    () => (room && places ? filterPlaces(places, { ...filters, query: "" }, listIds, now) : visible),
-    [room, places, filters, listIds, now, visible],
+    () => (room && places ? filterPlaces(places, { ...filters, query: "" }, listIds, now, origin) : visible),
+    [room, places, filters, listIds, now, origin, visible],
   );
   const roomOnCampus = view === "campus" && Boolean(room);
+  // 결과 중 내 위치와의 거리를 알 수 있는 곳, 가장 가까운 곳이 20km 넘게 떨어졌는지
+  const nearest = useMemo(() => {
+    let located = 0;
+    let min = Infinity;
+    for (const place of visible) {
+      const d = distanceFrom(origin, place);
+      if (d === undefined) continue;
+      located += 1;
+      min = Math.min(min, d);
+    }
+    return { located, far: located > 0 && min > 20_000 };
+  }, [visible, origin]);
 
   const filtersActive = JSON.stringify(filters) !== JSON.stringify(DEFAULT_FILTERS);
   const popular = useMemo(
@@ -242,6 +273,7 @@ function Main() {
     { view: "list", label: t.navHome, icon: House, show: true },
     { view: "map", label: t.navMap, icon: MapIcon, show: canShowMap },
     { view: "campus", label: t.navCampus, icon: School, show: true },
+    { view: "bus", label: t.navBus, icon: BusFront, show: true },
   ];
 
   return (
@@ -309,7 +341,7 @@ function Main() {
           <RoomFinder data={campus.data} query={deferredQuery} room={room} onShowCampus={() => changeView("campus")} />
         )}
 
-        {places && currentView !== "admin" && (
+        {places && currentView !== "admin" && currentView !== "bus" && (
           <Controls
             total={places.length}
             visibleCount={visible.length}
@@ -326,6 +358,10 @@ function Main() {
             openableCount={openableCount}
             hasZones={places.some((p) => p.zone)}
             hasIntl={places.some(isIntl)}
+            geoStatus={geo.status}
+            locatedCount={nearest.located}
+            geoFar={nearest.far}
+            onLocate={geo.locate}
           />
         )}
 
@@ -351,6 +387,7 @@ function Main() {
           </div>
         )}
 
+        {bus.data && currentView === "list" && !filtersActive && <NextBusCard data={bus.data} onOpen={() => changeView("bus")} />}
         {places && currentView === "list" && !filters.query && !filters.list && <HomeTiles counts={tileCounts} filters={filters} patch={patch} />}
         {places && currentView === "list" && !filtersActive && <PopularStrip places={popular} onOpen={openPlace} />}
 
@@ -390,6 +427,15 @@ function Main() {
           </Suspense>
         )}
 
+        {currentView === "bus" &&
+          (bus.data ? (
+            <BusPage data={bus.data} alarms={busAlarms} />
+          ) : (
+            <p className="notice" role="status">
+              {bus.error ? t.busLoadError : t.busLoading}
+            </p>
+          ))}
+
         {currentView === "admin" && places && (
           <Suspense fallback={<p className="notice">{t.loading}</p>}>
             <AdminPage places={places} />
@@ -409,6 +455,7 @@ function Main() {
                     onOpen={openPlace}
                     onToggleFavorite={session.toggleFavorite}
                     showChecked={filters.sort === "checked"}
+                    fromMe={distanceFrom(origin, place)}
                   />
                 </li>
               ))}
@@ -470,6 +517,7 @@ function Main() {
           onRatingsChanged={refreshRatings}
         />
       )}
+      <BusAlarmToasts data={bus.data} alarms={busAlarms} />
       {session.backend === "cloud" ? <CloudAuthDialog /> : <AuthDialog />}
       <AccountDialog
         onAdmin={() => {

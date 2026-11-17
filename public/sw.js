@@ -1,5 +1,5 @@
 // 오프라인에서도 한 번 열어본 화면을 볼 수 있게 하는 서비스 워커.
-// - 페이지(HTML)와 데이터(places.json)는 네트워크 우선: 배포된 최신 내용을 먼저 쓰고, 실패하면 저장본을 쓴다.
+// - 페이지(HTML)와 데이터(places.json, bus.json)는 네트워크 우선: 배포된 최신 내용을 먼저 쓰고, 실패하면 저장본을 쓴다.
 // - 해시가 붙은 빌드 파일(assets/)·이미지·아이콘은 저장본 우선.
 // - 그 외 같은 출처의 GET 요청은 저장본을 먼저 보여주고 뒤에서 갱신한다.
 const CACHE = "campuse-place-v1";
@@ -54,7 +54,18 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin || !url.pathname.startsWith(BASE)) return;
 
   if (request.mode === "navigate") event.respondWith(networkFirst(request, BASE));
-  else if (url.pathname === `${BASE}data/places.json`) event.respondWith(networkFirst(request));
+  else if (url.pathname === `${BASE}data/places.json` || url.pathname === `${BASE}data/bus.json`) event.respondWith(networkFirst(request));
   else if (/^(assets|images|icons)\//.test(url.pathname.slice(BASE.length))) event.respondWith(cacheFirst(request));
   else event.respondWith(staleWhileRevalidate(request));
+});
+
+// 버스 알림을 누르면 열려 있는 사이트 창으로 가고, 없으면 버스 화면을 연다.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      const open = clients.find((c) => new URL(c.url).pathname.startsWith(BASE));
+      return open ? open.focus() : self.clients.openWindow(`${BASE}?view=bus`);
+    }),
+  );
 });

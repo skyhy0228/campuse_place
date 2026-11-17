@@ -367,6 +367,9 @@ select {
 .filterItem > label, .filterItem > legend { padding: 0; font-size: 0.85rem; font-weight: 700; }
 .filterItem .hint { max-width: 32em; }
 .hint { color: var(--muted); font-size: 0.82rem; }
+.geoNote { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.geoNote .hint { flex: 1 1 18em; margin: 0; }
+.meta .fromMe { display: inline-flex; align-items: center; gap: 2px; font-weight: 600; color: var(--text); }
 
 .button {
   display: inline-flex;
@@ -845,6 +848,54 @@ select {
 .siteFoot { display: grid; gap: 4px; padding-top: 8px; color: var(--muted); font-size: 0.82rem; }
 
 /* ---------- 태블릿 ---------- */
+/* ---------- 버스 시간표 ---------- */
+.busPage { display: grid; gap: 14px; min-width: 0; }
+.busHead { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 1.3rem; }
+.busStatus { display: grid; gap: 4px; margin: 0; padding: 12px 16px; border-radius: var(--r-lg); }
+.busStatus.off strong { color: var(--danger); }
+.busRoutes button { flex: 1 1 auto; }
+.busStops { align-items: center; }
+.busStops .hint { margin-right: 2px; }
+.busNext { display: grid; gap: 6px; padding: 16px; border-radius: var(--r-lg); }
+.busNextLabel { margin: 0; color: var(--muted); font-size: 0.85rem; font-weight: 600; }
+.busCountdown { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 0; }
+.busCountdown strong { font-size: 2rem; line-height: 1.1; color: var(--accent-strong); font-variant-numeric: tabular-nums; }
+.busCountdown span { font-weight: 600; }
+.busPath { margin: 0; color: var(--muted); font-size: 0.9rem; }
+.busNextActions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 4px; }
+.busNextActions .hint { margin: 0; }
+.busAlarmBar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 0.88rem; color: var(--muted); }
+.busAlarmBar .hint { flex: 1 1 100%; margin: 0; }
+.busAlarmList h3, .busTableTitle { margin: 4px 0 0; font-size: 1rem; }
+.busAlarmList ul { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 0; padding: 0; list-style: none; }
+.busAlarmList .chip { white-space: normal; padding-right: 4px; }
+.chipX { display: inline-grid; place-items: center; width: 30px; height: 30px; border: 0; border-radius: 50%; background: transparent; color: var(--muted); }
+.chipX:hover { background: var(--hover); color: var(--text); }
+.busTableWrap { overflow-x: auto; border-radius: var(--r-lg); }
+.busTable { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 0.92rem; }
+.busTable th, .busTable td { padding: 6px 10px; border-bottom: 1px solid var(--line-soft); text-align: center; white-space: nowrap; }
+.busTable th { position: sticky; top: 0; background: var(--surface-2); font-size: 0.82rem; color: var(--muted); }
+.busTable .board { font-weight: 700; }
+.busTable th.board { color: var(--text); }
+.busTable td .busNote { display: block; font-size: 0.72rem; font-weight: 500; color: var(--muted); white-space: normal; }
+.busTable tr.past td { color: var(--muted); opacity: 0.55; }
+.busTable tr.next td { background: var(--accent-soft); }
+.busTable tr.next td.board { color: var(--accent-strong); }
+.busTable td .iconButton { width: 36px; height: 36px; }
+.busNote { color: var(--muted); }
+.busFoot { display: grid; gap: 4px; }
+.busFoot p { margin: 0; }
+.busFoot a { display: inline-flex; align-items: center; gap: 2px; }
+.nextBusCard { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 16px; border: 0; border-radius: var(--r-lg); text-align: left; color: var(--text); }
+.nextBusCard > svg { flex: none; color: var(--accent-strong); }
+.nextBusText { display: grid; gap: 2px; min-width: 0; }
+.nextBusText .hint { font-size: 0.8rem; }
+.busToasts { position: fixed; left: 50%; top: 12px; z-index: 60; display: grid; gap: 8px; width: min(92vw, 420px); transform: translateX(-50%); }
+.busToast { display: flex; align-items: center; gap: 10px; padding: 10px 8px 10px 14px; border-radius: var(--r-lg); box-shadow: 0 12px 32px -12px var(--shadow); }
+.busToast > svg { flex: none; color: var(--accent-strong); }
+.busToast p { display: grid; flex: 1; margin: 0; }
+.busToast p span { font-size: 0.88rem; color: var(--muted); }
+
 @media (min-width: 640px) {
   .side { padding: 20px 24px 4px; }
   .main { padding-left: 24px; padding-right: 24px; }

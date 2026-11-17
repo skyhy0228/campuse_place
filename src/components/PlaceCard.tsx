@@ -1,5 +1,6 @@
-import { ExternalLink, Star, ThumbsUp } from "lucide-react";
+import { ExternalLink, MapPin, Star, ThumbsUp } from "lucide-react";
 import { coverFor } from "../lib/cover";
+import { formatDistance, walkMinutes } from "../lib/geo";
 import { useLang } from "../lib/i18n";
 import { placeText, type PlaceView } from "../lib/places";
 import { categoryIcon } from "./categoryIcon";
@@ -13,9 +14,11 @@ interface Props {
   onToggleFavorite: (id: string) => void;
   // 확인한날로 정렬할 때 카드에 날짜를 보여준다.
   showChecked?: boolean;
+  // 가까운 순으로 볼 때 내 위치에서의 직선거리(m). 이때는 '학교에서 N km' 대신 이 값을 보여준다.
+  fromMe?: number;
 }
 
-export function PlaceCard({ place, favorite, open, onOpen, onToggleFavorite, showChecked = false }: Props) {
+export function PlaceCard({ place, favorite, open, onOpen, onToggleFavorite, showChecked = false, fromMe }: Props) {
   const { lang, t } = useLang();
   const text = placeText(place, lang);
   const cover = coverFor(place, t, text.name);
@@ -64,7 +67,15 @@ export function PlaceCard({ place, favorite, open, onOpen, onToggleFavorite, sho
               {place.rating.toFixed(1)}
             </span>
           )}
-          {place.distanceKm !== undefined && place.distanceKm > 0 && <span>{place.distanceKm}km</span>}
+          {fromMe !== undefined ? (
+            <span className="fromMe" title={t.fromMe(formatDistance(fromMe), walkMinutes(fromMe))}>
+              <MapPin size={13} aria-hidden="true" />
+              <span className="srOnly">{t.fromMe(formatDistance(fromMe), walkMinutes(fromMe))}</span>
+              <span aria-hidden="true">{formatDistance(fromMe)}</span>
+            </span>
+          ) : (
+            place.distanceKm !== undefined && place.distanceKm > 0 && <span>{place.distanceKm}km</span>
+          )}
           <span className="recommend" title={t.recommendations}>
             <ThumbsUp size={13} aria-hidden="true" />
             <span className="srOnly">{t.recommendations} </span>

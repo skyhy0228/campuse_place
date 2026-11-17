@@ -72,7 +72,8 @@ export interface PlacesFile {
   places: Place[];
 }
 
-export type SortKey = "recommendations" | "rating" | "name" | "checked";
+// distance = 내 위치에서 가까운 순 (위치를 받지 못하면 추천수 순으로 보여준다)
+export type SortKey = "recommendations" | "rating" | "name" | "checked" | "distance";
 
 export interface Filters {
   query: string;

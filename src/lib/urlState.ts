@@ -1,13 +1,13 @@
 import { DEFAULT_FILTERS, type Campus, type Filters, type PriceBand, type SortKey, type Zone } from "../types";
 
-const SORTS: SortKey[] = ["recommendations", "rating", "name", "checked"];
+const SORTS: SortKey[] = ["recommendations", "rating", "name", "checked", "distance"];
 const CAMPUS: Campus[] = ["in", "out"];
 const PRICES: PriceBand[] = ["free", "under10", "10to20", "over20"];
 const ZONES: Zone[] = ["front", "city", "suburb"];
 
-// list = 홈(목록), map = 네이버 지도, campus = 캠퍼스 지도, admin = 관리자 화면
-export type View = "list" | "map" | "campus" | "admin";
-const VIEWS: View[] = ["map", "campus", "admin"];
+// list = 홈(목록), map = 네이버 지도, campus = 캠퍼스 지도, bus = 버스 시간표, admin = 관리자 화면
+export type View = "list" | "map" | "campus" | "bus" | "admin";
+const VIEWS: View[] = ["map", "campus", "bus", "admin"];
 export const viewFromSearch = (search: string): View => {
   const value = new URLSearchParams(search).get("view");
   return VIEWS.includes(value as View) ? (value as View) : "list";

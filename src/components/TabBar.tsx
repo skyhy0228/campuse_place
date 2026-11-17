@@ -1,4 +1,4 @@
-import { House, Map as MapIcon, School, Star, UserRound } from "lucide-react";
+import { BusFront, House, Map as MapIcon, School, Star, UserRound } from "lucide-react";
 import { useLang } from "../lib/i18n";
 import type { View } from "../lib/urlState";
 
@@ -33,6 +33,10 @@ export function TabBar({ view, canShowMap, favoritesOn, onView, onFavorites, onA
           <School size={24} />
         </span>
         {t.navCampus}
+      </button>
+      <button type="button" className="tab" aria-current={current("bus")} onClick={() => onView("bus")}>
+        <BusFront size={22} aria-hidden="true" />
+        {t.navBus}
       </button>
       <button type="button" className="tab" aria-pressed={favoritesOn} onClick={onFavorites}>
         <Star size={22} aria-hidden="true" fill={favoritesOn ? "currentColor" : "none"} />

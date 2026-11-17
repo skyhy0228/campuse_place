@@ -1,7 +1,8 @@
-import { ListFilter, RotateCcw, Star } from "lucide-react";
+import { ListFilter, LocateFixed, RotateCcw, Star } from "lucide-react";
 import { foodPhotoUrl } from "../lib/cover";
 import { useLang } from "../lib/i18n";
 import type { CategoryOption } from "../lib/places";
+import type { GeoStatus } from "../lib/useMyLocation";
 import type { Collection } from "../lib/userData";
 import type { Campus, Filters, PriceBand, SortKey, Zone } from "../types";
 import { categoryIcon } from "./categoryIcon";
@@ -22,6 +23,11 @@ interface Props {
   openableCount: number;
   hasZones: boolean;
   hasIntl: boolean;
+  // 가까운 순 정렬: 위치 상태, 위치가 확인된 장소 수, 가장 가까운 곳도 멀리 있는지
+  geoStatus: GeoStatus;
+  locatedCount: number;
+  geoFar: boolean;
+  onLocate: () => void;
 }
 
 const FOOD_CATEGORIES = ["", "식당", "카페"];
@@ -35,6 +41,7 @@ export function Controls(props: Props) {
     { value: "rating", label: t.sortRating },
     { value: "name", label: t.sortName },
     { value: "checked", label: t.sortChecked },
+    { value: "distance", label: t.sortDistance },
   ];
   const campusOptions: { value: Campus; label: string }[] = [
     { value: "", label: t.all },
@@ -173,6 +180,28 @@ export function Controls(props: Props) {
           </button>
         </div>
       </div>
+
+      {filters.sort === "distance" && (
+        <div className="geoNote" role="status" aria-live="polite">
+          <p className="hint">
+            {props.geoStatus === "ready"
+              ? `${t.geoReady(props.locatedCount)}${props.geoFar ? ` ${t.geoFar}` : ""}`
+              : props.geoStatus === "denied"
+                ? t.geoDenied
+                : props.geoStatus === "unavailable"
+                  ? t.geoUnavailable
+                  : props.geoStatus === "unsupported"
+                    ? t.geoUnsupported
+                    : t.geoLocating}
+          </p>
+          {props.geoStatus !== "unsupported" && (
+            <button type="button" className="button small" onClick={props.onLocate} disabled={props.geoStatus === "locating"}>
+              <LocateFixed size={15} aria-hidden="true" />
+              {t.geoRetry}
+            </button>
+          )}
+        </div>
+      )}
 
       {props.panelOpen && (
         <div id="filterPanel" className="filterPanel" role="group" aria-label={t.extraFilters}>

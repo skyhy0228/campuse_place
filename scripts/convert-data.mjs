@@ -33,6 +33,38 @@ const teamAliasPath = path.join(root, "data", "team-aliases.json");
 const outDir = path.join(root, "public", "data");
 const outPath = path.join(outDir, "places.json");
 const SHEET = "정규화데이터";
+const topicsPath = path.join(root, "data", "topics.json");
+const topicAssignPath = path.join(root, "data", "topic-assign.json");
+
+// 소주제를 붙인다. 범위(scope)는 소주제 묶음에서 정해진다: 교내(in)·교외(out) 장소, 그 밖은 정보(info).
+// 배정표의 scope 'both' 는 교내·교외 양쪽에 보이는 항목(999번 버스)이다. 맛집(식당·카페)은 소주제 없이 둔다.
+function applyTopics(places) {
+  const dict = JSON.parse(fs.readFileSync(topicsPath, "utf8"));
+  const { hidden = {}, assign = {} } = JSON.parse(fs.readFileSync(topicAssignPath, "utf8"));
+  const groups = new Map(dict.groups.map((g) => [g.id, g]));
+  const subtopics = new Map(dict.subtopics.map((s) => [s.id, s]));
+  for (const s of subtopics.values()) if (!groups.has(s.group)) throw new Error(`소주제 ${s.id} 의 묶음 ${s.group} 이 없다`);
+
+  const kept = places.filter((p) => !hidden[p.id]);
+  const unassigned = [];
+  for (const place of kept) {
+    const entry = assign[place.id];
+    if (!entry) {
+      if (place.category !== "식당" && place.category !== "카페") unassigned.push(place.name);
+      continue;
+    }
+    const sub = subtopics.get(entry.subtopic);
+    if (!sub) throw new Error(`없는 소주제: ${entry.subtopic} (${place.name})`);
+    const group = groups.get(sub.group);
+    place.subtopic = sub.id;
+    place.scope = entry.scope === "both" ? "both" : group.kind === "place" ? group.id : "info";
+  }
+  if (unassigned.length) console.warn(`소주제 미배정 ${unassigned.length}곳 (data/topic-assign.json 에 추가하세요): ${unassigned.join(", ")}`);
+  console.log(`소주제 배정 ${kept.filter((p) => p.subtopic).length}곳, 숨김 ${places.length - kept.length}곳`);
+
+  const strip = (obj) => Object.fromEntries(Object.entries(obj).filter(([k]) => !k.startsWith("_")));
+  return { places: kept, dict: { ...strip(dict), saverWords: strip(dict.saverWords) } };
+}
 
 const COLUMNS = {
   name: "이름",
@@ -282,8 +314,13 @@ function main() {
     intlTips += 1;
   }
 
+  // 소주제 배정 (data/topics.json + data/topic-assign.json). 숨긴 항목은 빼고, 배정이 없으면 경고만 한다.
+  const topics = applyTopics(places);
+
   fs.mkdirSync(outDir, { recursive: true });
-  fs.writeFileSync(outPath, JSON.stringify({ count: places.length, places }) + "\n", "utf8");
+  fs.writeFileSync(outPath, JSON.stringify({ count: topics.places.length, places: topics.places }) + "\n", "utf8");
+  // 화면이 쓰는 소주제 사전 (설명용 '_' 키는 뺀다)
+  fs.writeFileSync(path.join(outDir, "topics.json"), JSON.stringify(topics.dict) + "\n", "utf8");
 
   // 캠퍼스 지도 화면이 쓰는 건물·정류장·동선·층별 안내 (ut 꿀팁 지도)
   const floors = readTeam("floors.json");
@@ -299,7 +336,7 @@ function main() {
   }
 
   console.log(`XLSX 행 수: ${rows.length}`);
-  console.log(`JSON 장소 수: ${places.length} (이름 없어 제외: ${skippedNoName}, 유학생 꿀팁 추가: ${intlTips})`);
+  console.log(`JSON 장소 수: ${topics.places.length} (이름 없어 제외: ${skippedNoName}, 숨김: ${places.length - topics.places.length}, 유학생 꿀팁 추가: ${intlTips})`);
   console.log(`추천수 합계: ${places.reduce((s, p) => s + p.recommendations, 0)}`);
   console.log(`지도 링크 보유: ${places.filter((p) => p.mapUrl).length}, 이미지 연결: ${places.filter((p) => p.images.length).length}`);
   console.log("--- 정리 보고 ---");

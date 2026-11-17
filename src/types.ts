@@ -46,7 +46,15 @@ export interface Place {
   campusXY?: { x: number; y: number; building?: string; approx?: boolean };
   // 원본 XLSX 가 아닌 곳에서 온 항목 ('knut' 유학생 꿀팁, 'report' 학생 제보)
   source?: "knut" | "report";
+
+  // ---- 소주제 (data/topics.json, data/topic-assign.json → convert-data.mjs). 맛집에는 없다 ----
+  subtopic?: string;
+  // 교내 장소 / 교외 장소 / 둘 다(999번 버스) / 정보형 꿀팁
+  scope?: "in" | "out" | "both" | "info";
 }
+
+// 검색 중심 첫 화면에서 고른 입구. '' 이면 검색 첫 화면이다.
+export type Entry = "" | "food" | "place" | "info";
 
 export type Zone = "front" | "city" | "suburb";
 
@@ -88,6 +96,8 @@ export interface Filters {
   food: string;
   // knut: 유학생 추천만
   intl: boolean;
+  // 첫 화면 입구 (맛집 / 장소 / 정보)
+  entry: Entry;
 }
 
 export const DEFAULT_FILTERS: Filters = {
@@ -101,4 +111,5 @@ export const DEFAULT_FILTERS: Filters = {
   zone: "",
   food: "",
   intl: false,
+  entry: "",
 };

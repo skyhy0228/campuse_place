@@ -25,12 +25,14 @@
     <meta name="twitter:description" content="국립한국교통대학교 충주캠퍼스 학생들이 직접 모은 맛집, 숨은 장소, 생활 꿀팁" />
     <meta name="twitter:image" content="https://skyhy0228.github.io/campuse_place/og.png" />
 
-    <!-- 저장된 화면 테마와 언어(한국어/中文)를 첫 화면이 그려지기 전에 적용해 깜빡임을 막는다 -->
+    <!-- 저장된 화면 테마와 언어(한국어/中文/English)를 첫 화면이 그려지기 전에 적용해 깜빡임을 막는다 -->
     <script>
       try {
         var t = localStorage.getItem("campuse:theme");
         if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
-        if (localStorage.getItem("campuse:lang") === "zh") document.documentElement.lang = "zh-CN";
+        var l = localStorage.getItem("campuse:lang");
+        if (l === "zh") document.documentElement.lang = "zh-CN";
+        if (l === "en") document.documentElement.lang = "en";
       } catch (e) {}
     </script>
   </head>

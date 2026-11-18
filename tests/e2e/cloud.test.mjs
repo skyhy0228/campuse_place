@@ -3,7 +3,7 @@
 // 사용: npm run build:e2e 뒤 npm run test:e2e
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
-import { cards, launchBrowser, places, settle, startServer } from "./helpers.mjs";
+import { FAKE_KAKAO_MAPS, KAKAO_SDK_URL, axeScan, cards, launchBrowser, places, settle, startServer } from "./helpers.mjs";
 
 const SB = "https://e2e.supabase.test";
 const UID = "0a1b2c3d-0000-4000-8000-000000000001";
@@ -45,10 +45,39 @@ const approved = {
   reviewed_at: "2026-11-02T00:00:00Z",
 };
 const pending = { ...approved, id: "99999999-2222-4333-8444-555555555555", name: "대기 중인 제보", status: "pending", reviewed_at: null, user_id: UID };
+const pendingFix = {
+  ...pending,
+  id: "88888888-2222-4333-8444-555555555555",
+  kind: "fix",
+  place_id: burrito.id,
+  name: burrito.name,
+  category: "식당",
+  body: "영업시간이 바뀌었어요. 이제 10시에 열어요.",
+  changes: { hours: "매일 10:00~22:00" },
+};
+// 운영자가 승인한 정보 수정과 '아직 맞아요' 통계
+const override = { place_id: burrito.id, changes: { hours: "매일 10:00~22:00", price: "15,000원" }, reviewed_at: "2026-11-05T00:00:00Z" };
+const confirmRow = { place_id: burrito.id, n: 2, last_at: "2026-11-04T03:00:00Z" };
+// 학식은 오늘(한국 날짜) 것으로, 버스는 하루 종일 다니는 것으로 만든다.
+const todayKst = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+const menu = { id: "m1", served_on: todayKst, cafeteria: "학생식당", meal: "lunch", items: "제육볶음\n된장국, 김치", price: "5,000원", note: null, updated_at: "2026-11-16T00:00:00Z" };
+const allDay = Array.from({ length: 24 }, (_, h) => [`${String(h).padStart(2, "0")}:00`, `${String(h).padStart(2, "0")}:30`]).flat().concat("23:59");
+const bus = { id: "b1", line: "시내버스 100", stop: "정문", direction: "충주터미널", day_type: "everyday", times: allDay, note: null, source: "테스트 시간표", sort_order: 0, updated_at: "2026-11-16T00:00:00Z" };
+const stats = {
+  members: 12,
+  members7: 3,
+  reviews: 5,
+  reviewsHidden: 1,
+  submissions: { pending: 2, approved: 4 },
+  confirms30: 7,
+  views30: 99,
+  topViews: [{ id: burrito.id, n: 40 }],
+  topFavorites: [{ id: burrito.id, n: 6 }],
+};
 
 // 요청을 기록하고 가짜 응답을 돌려준다.
 async function fakeSupabase(context, { admin = false } = {}) {
-  const state = { rpc: [], saved: [], patches: [] };
+  const state = { rpc: [], saved: [], patches: [], inserts: [] };
   const cors = { "access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "*", "access-control-expose-headers": "*" };
   await context.route(`${SB}/**`, async (route) => {
     const req = route.request();
@@ -75,9 +104,19 @@ async function fakeSupabase(context, { admin = false } = {}) {
       }
       const status = url.searchParams.get("status");
       if (status === "eq.approved") return json([approved]);
-      if (status === "eq.pending") return json([pending]);
+      if (status === "eq.pending") return json([pending, pendingFix]);
       return json([]);
     }
+    if (p === "/rest/v1/cafeteria_menus" || p === "/rest/v1/bus_times") {
+      if (req.method() === "POST") {
+        state.inserts.push({ table: p.split("/").pop(), body });
+        return json([], 201);
+      }
+      return json(p.endsWith("menus") ? [menu] : [bus]);
+    }
+    if (p === "/rest/v1/rpc/place_overrides") return json([override]);
+    if (p === "/rest/v1/rpc/confirm_stats") return json([confirmRow]);
+    if (p === "/rest/v1/rpc/admin_stats") return json(stats);
     if (p === "/rest/v1/user_data") {
       if (req.method() === "GET") return json([]);
       state.saved.push(body);
@@ -97,6 +136,7 @@ async function fakeSupabase(context, { admin = false } = {}) {
 // 페이지를 열기 전에 가짜 Supabase 를 연결해야 하므로 helpers 의 withPage 대신 컨텍스트를 직접 만든다.
 async function runCloud(fn, { admin = false, url = "", viewport, checkErrors = true, ready = "article.card" } = {}) {
   const context = await browser.newContext({ viewport: viewport ?? { width: 1440, height: 900 }, locale: "ko-KR", serviceWorkers: "block" });
+  await context.route(KAKAO_SDK_URL, (route) => route.fulfill({ contentType: "text/javascript", body: FAKE_KAKAO_MAPS }));
   const state = await fakeSupabase(context, { admin });
   const page = await context.newPage();
   const errors = [];
@@ -190,10 +230,122 @@ describe("Supabase 연결 (가짜 서버)", () => {
         await page.locator(".headerActions .account").click();
         await page.getByRole("button", { name: "관리자 화면" }).click();
         await page.getByText("대기 중인 제보").waitFor();
-        await page.getByRole("button", { name: "승인", exact: true }).click();
+        await page.locator(".adminItem").filter({ hasText: "대기 중인 제보" }).getByRole("button", { name: "승인", exact: true }).click();
         await page.getByText("승인했습니다.").waitFor();
         assert.equal(state.patches[0].body.status, "approved");
         assert.match(state.patches[0].query, new RegExp(`id=eq.${pending.id}`));
+      },
+      { admin: true },
+    ));
+});
+
+describe("Supabase: 정보 수정 반영 · 아직 맞아요 · 학식 · 버스 · 통계 (가짜 서버)", () => {
+  test("승인된 정보 수정이 상세에 반영되고, 학생 확인 기록이 보인다", () =>
+    runCloud(async (page, state) => {
+      await page.fill("#search", burrito.name);
+      await settle(page);
+      await cards(page).first().locator(".cardLink").click();
+      await page.getByRole("tab", { name: "정보" }).click();
+      const panel = page.locator("#panel-info");
+      await panel.getByText("매일 10:00~22:00").waitFor();
+      assert.match(await panel.innerText(), /2026-11-05에 학생 제보를 운영자가 확인해 고친 정보입니다/);
+      assert.match(await panel.innerText(), /학생 확인 2026-11-04 · 2명/);
+      await page.getByRole("tab", { name: "메뉴" }).click();
+      await page.locator("#panel-menu").getByText("15,000원").waitFor();
+      // 상세를 열면 조회수를 한 번 센다.
+      assert.ok(state.rpc.some((c) => c.name === "place_view" && c.body.p_place === burrito.id));
+    }));
+
+  test("로그인하면 '아직 맞아요'로 확인을 남긴다", () =>
+    runCloud(async (page, state) => {
+      await signIn(page);
+      await signedIn(page);
+      await page.fill("#search", burrito.name);
+      await settle(page);
+      await cards(page).first().locator(".cardLink").click();
+      await page.getByRole("tab", { name: "정보" }).click();
+      await page.getByRole("button", { name: "아직 맞아요" }).click();
+      await page.getByText("확인해 줘서 고마워요!").waitFor();
+      assert.deepEqual(state.rpc.find((c) => c.name === "place_confirm")?.body, { p_place: burrito.id });
+    }));
+
+  test("'정보가 달라요'에 바뀐 값을 칸별로 보낸다", () =>
+    runCloud(async (page, state) => {
+      await signIn(page);
+      await signedIn(page);
+      await page.fill("#search", burrito.name);
+      await settle(page);
+      await cards(page).first().locator(".cardLink").click();
+      await page.getByRole("button", { name: "정보가 달라요" }).click();
+      const dialog = page.getByRole("dialog", { name: "정보 수정 제보" });
+      await dialog.getByLabel("운영시간").fill("월~토 11:00~20:00");
+      await dialog.getByLabel("가격대").fill("  ");
+      await dialog.getByLabel(/무엇이 다른가요/).fill("영업시간이 줄었어요. 일요일은 쉬어요.");
+      await dialog.getByRole("button", { name: "보내기" }).click();
+      await page.getByText("운영자가 확인한 뒤 공개됩니다").first().waitFor();
+      const call = state.rpc.find((c) => c.name === "submission_create");
+      assert.equal(call?.body.p.kind, "fix");
+      assert.equal(call?.body.p.place_id, burrito.id);
+      assert.deepEqual(call?.body.p.changes, { hours: "월~토 11:00~20:00" });
+    }));
+
+  test("첫 화면에서 오늘의 학식과 다음 버스를 본다", () =>
+    runCloud(async (page) => {
+      const quick = page.getByRole("navigation", { name: "바로 가기" });
+      await quick.getByRole("button", { name: /오늘의 학식/ }).waitFor();
+      assert.match(await quick.getByRole("button", { name: /오늘의 학식/ }).innerText(), /학생식당/);
+      await quick.getByRole("button", { name: /오늘의 학식/ }).click();
+      const menuDialog = page.getByRole("dialog", { name: "이번 주 학식" });
+      await menuDialog.getByText("제육볶음").waitFor();
+      assert.equal(await menuDialog.locator(".mealItems li").count(), 3);
+      assert.equal(await menuDialog.getByRole("button", { name: /^오늘/ }).getAttribute("aria-pressed"), "true");
+      await axeScan(page, "학식");
+      await page.keyboard.press("Escape");
+
+      await quick.getByRole("button", { name: /다음 버스/ }).click();
+      const busDialog = page.getByRole("dialog", { name: "버스 시간표" });
+      await busDialog.getByRole("heading", { name: "시내버스 100" }).waitFor();
+      assert.equal(await busDialog.locator(".busTime.first").count(), 1);
+      assert.match(await busDialog.innerText(), /출처: 테스트 시간표/);
+      await busDialog.locator(".busAll summary").first().click();
+      await axeScan(page, "버스");
+    }));
+
+  test("관리자 화면에서 학식을 입력하고 통계를 본다", () =>
+    runCloud(
+      async (page, state) => {
+        await signIn(page);
+        await signedIn(page);
+        await page.locator(".headerActions .account").click();
+        await page.getByRole("button", { name: "관리자 화면" }).click();
+
+        // 정보 수정 제보는 반영할 값을 보여준다.
+        const fix = page.locator(".adminItem").filter({ hasText: "영업시간이 바뀌었어요" });
+        await fix.waitFor();
+        assert.equal(await fix.getByLabel("운영시간").inputValue(), "매일 10:00~22:00");
+        await axeScan(page, "관리자 제보");
+
+        await page.getByRole("button", { name: "학식", exact: true }).click();
+        await page.getByLabel("식당 이름").waitFor();
+        await axeScan(page, "관리자 학식");
+        await page.getByLabel("식당 이름").fill("기숙사식당");
+        await page.getByLabel("메뉴", { exact: true }).fill("돈가스\n샐러드");
+        await page.getByRole("button", { name: "추가", exact: true }).click();
+        await page.getByText("추가했습니다.").waitFor();
+        const insert = state.inserts.find((x) => x.table === "cafeteria_menus");
+        assert.equal(insert?.body.cafeteria, "기숙사식당");
+        assert.equal(insert?.body.meal, "lunch");
+
+        await page.getByRole("button", { name: "통계", exact: true }).click();
+        await page.getByText("최근 30일 상세 조회").waitFor();
+        assert.match(await page.locator(".statTiles").innerText(), /99/);
+        assert.match(await page.locator(".rankList").first().innerText(), new RegExp(`${burrito.name}\\s*40회`));
+        await axeScan(page, "관리자 통계");
+
+        await page.getByRole("button", { name: "버스", exact: true }).click();
+        await page.getByLabel("출발 시각").fill("7:30, 08:10 12시 5분");
+        await page.getByText("읽은 시각 3개: 07:30, 08:10, 12:05").waitFor();
+        await axeScan(page, "관리자 버스");
       },
       { admin: true },
     ));

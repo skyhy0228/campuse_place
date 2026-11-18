@@ -1,17 +1,18 @@
 import { useEffect, useRef } from "react";
-import { pinIcon, type Located } from "../lib/naverMap";
-import { useNaverMap } from "../lib/useNaverMap";
+import { pinImage, type Located } from "../lib/kakaoMap";
+import { useKakaoMap } from "../lib/useKakaoMap";
 
 // 상세 보기 안의 작은 지도. 장소 하나에 핀을 꽂는다.
 export function PlaceMiniMap({ place }: { place: Located }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { maps, map, error } = useNaverMap(containerRef, { lat: place.lat, lng: place.lng, zoom: 17 });
+  const { maps, map, error } = useKakaoMap(containerRef, { lat: place.lat, lng: place.lng, level: 3 });
 
   useEffect(() => {
     if (!maps || !map) return;
     const position = new maps.LatLng(place.lat, place.lng);
+    map.relayout();
     map.setCenter(position);
-    const marker = new maps.Marker({ position, map, icon: pinIcon(maps, place.category), title: place.name, clickable: false });
+    const marker = new maps.Marker({ position, map, image: pinImage(maps, place.category), title: place.name, clickable: false });
     return () => marker.setMap(null);
   }, [maps, map, place.lat, place.lng, place.category, place.name]);
 

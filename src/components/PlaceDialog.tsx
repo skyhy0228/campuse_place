@@ -4,6 +4,7 @@ import {
   CalendarCheck,
   CalendarX,
   Check,
+  CircleCheck,
   Clock,
   Copy,
   ExternalLink,
@@ -15,16 +16,19 @@ import {
   Share2,
   Star,
   ThumbsUp,
+  TriangleAlert,
   User,
   Utensils,
 } from "lucide-react";
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { coverFor } from "../lib/cover";
 import { useLang } from "../lib/i18n";
-import { isLocated, mapEnabled } from "../lib/naverMap";
-import { placeText, type PlaceView } from "../lib/places";
+import { isLocated, kakaoMapLink, mapEnabled } from "../lib/kakaoMap";
+import { isPlaceStale, lastChecked, placeText, type PlaceView } from "../lib/places";
+import { confirmPlace } from "../lib/remote";
 import { reportUrl } from "../lib/report";
-import { supabaseEnabled } from "../lib/supabase";
+import { useSession } from "../lib/session";
+import { friendlyError, supabaseEnabled } from "../lib/supabase";
 import { categoryIcon } from "./categoryIcon";
 import { CollectionPicker } from "./CollectionPicker";
 import { Modal } from "./Modal";
@@ -42,9 +46,66 @@ interface Props {
   onShowCampus?: (id: string) => void;
   onReport?: (place: PlaceView) => void;
   onRatingsChanged?: () => void;
+  onConfirmed?: () => void;
 }
 
 type Tab = "intro" | "menu" | "info" | "reviews";
+
+// '아직 맞아요': 다녀온 회원이 정보가 그대로라고 알려 준다. (Supabase 연결 시)
+function ConfirmBox({ place, onConfirmed }: { place: PlaceView; onConfirmed?: () => void }) {
+  const { t } = useLang();
+  const s = useSession();
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState("");
+
+  const confirm = async () => {
+    if (!s.user) {
+      s.openAuth("login");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      await confirmPlace(place.id);
+      setDone(true);
+      onConfirmed?.();
+    } catch (e) {
+      setError(friendlyError(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="confirmBox" aria-labelledby="confirmTitle">
+      <h3 id="confirmTitle" className="panelTitle">
+        {t.confirmTitle}
+      </h3>
+      <p className="hint">{t.confirmHint}</p>
+      {/* 확인한날 줄이 없는 항목은 여기에 학생 확인 기록을 보여준다. */}
+      {place.confirmedAt && !place.checkedAt && <p className="hint">{t.confirmBy(place.confirmedAt, place.confirmCount)}</p>}
+      {done ? (
+        <p className="formNotice" role="status">
+          {t.confirmDone}
+        </p>
+      ) : (
+        <div className="buttonRow">
+          <button type="button" className="button small" onClick={confirm} disabled={busy || s.suspended}>
+            <CircleCheck size={15} aria-hidden="true" />
+            {t.confirmYes}
+          </button>
+        </div>
+      )}
+      {s.suspended && <p className="hint">{t.reviewsSuspended}</p>}
+      {error && (
+        <p className="formError" role="alert">
+          {error}
+        </p>
+      )}
+    </section>
+  );
+}
 
 function Row({ icon, label, children }: { icon: ReactNode; label: string; children: ReactNode }) {
   return (
@@ -58,7 +119,7 @@ function Row({ icon, label, children }: { icon: ReactNode; label: string; childr
   );
 }
 
-export function PlaceDialog({ place, favorite, open, onClose, onToggleFavorite, onShowMap, onShowCampus, onReport, onRatingsChanged }: Props) {
+export function PlaceDialog({ place, favorite, open, onClose, onToggleFavorite, onShowMap, onShowCampus, onReport, onRatingsChanged, onConfirmed }: Props) {
   const { lang, t } = useLang();
   const text = placeText(place, lang);
   const cover = coverFor(place, t, text.name);
@@ -133,6 +194,10 @@ export function PlaceDialog({ place, favorite, open, onClose, onToggleFavorite, 
   const located = isLocated(place);
   const showZhNote = lang === "zh" && text.note && text.note !== text.summary;
   const intlTip = place.intl ? (lang === "zh" ? place.intl.zh || place.intl.ko : place.intl.ko) : "";
+  const intlLang = place.intl && !(lang === "zh" && place.intl.zh) && lang !== "ko" ? "ko" : undefined;
+  // 화면 언어가 한국어가 아니면, 번역이 없는 원문(설명·위치 등)에 lang="ko" 를 붙인다.
+  const koText = lang !== "ko" ? "ko" : undefined;
+  const stale = isPlaceStale(place, new Date());
   const soloLabel = place.solo ? { good: t.soloGood, ok: t.soloOk, hard: t.soloHard }[place.solo] : "";
   const zoneLabel = place.zone ? { front: t.zoneFront, city: t.zoneCity, suburb: t.zoneSuburb }[place.zone] : "";
   const subLine = [zoneLabel, text.food].filter(Boolean).join(" · ");
@@ -168,9 +233,13 @@ export function PlaceDialog({ place, favorite, open, onClose, onToggleFavorite, 
             {place.isRecent && <span className="badge recent">{t.recent}</span>}
             {place.intl && <span className="badge intl">{t.intlOnly}</span>}
             {place.source === "report" && <span className="badge">{t.reportFromMember}</span>}
+            {place.closed && <span className="badge closed">{t.closedBadge}</span>}
+            {stale && !place.closed && <span className="badge stale">{t.staleBadge}</span>}
           </div>
           <div className="titleRow">
-            <h2 id="dialogTitle">{text.name}</h2>
+            <h2 id="dialogTitle" lang={text.srcLang}>
+              {text.name}
+            </h2>
           </div>
           {text.nameKo && (
             <p className="altName" lang="ko">
@@ -180,8 +249,20 @@ export function PlaceDialog({ place, favorite, open, onClose, onToggleFavorite, 
               </button>
             </p>
           )}
-          {lang === "zh" && !text.translated && <p className="hint">{t.noZh}</p>}
+          {lang !== "ko" && !text.translated && <p className="hint">{t.noZh}</p>}
           {subLine && <p className="subLine">{subLine}</p>}
+          {place.closed && (
+            <p className="warnNote" role="note">
+              <TriangleAlert size={16} aria-hidden="true" />
+              {t.closedNotice}
+            </p>
+          )}
+          {stale && !place.closed && (
+            <p className="warnNote" role="note">
+              <TriangleAlert size={16} aria-hidden="true" />
+              {t.staleNotice(lastChecked(place))}
+            </p>
+          )}
 
           <div className="pills">
             {place.rating !== undefined && (
@@ -225,16 +306,20 @@ export function PlaceDialog({ place, favorite, open, onClose, onToggleFavorite, 
 
           {tab === "intro" && (
             <div className="tabPanel" role="tabpanel" id="panel-intro" aria-labelledby="tab-intro">
-              {text.summary && <p className="quote dialogSummary">{text.summary}</p>}
+              {text.summary && (
+                <p className="quote dialogSummary" lang={text.srcLang}>
+                  {text.summary}
+                </p>
+              )}
               {intlTip && (
                 <div className="intlBox">
                   <strong>{t.intlTip}</strong>
-                  <p>{intlTip}</p>
+                  <p lang={intlLang}>{intlTip}</p>
                 </div>
               )}
               {showZhNote && <p>{text.note}</p>}
               {place.detailItems.length > 0 && (
-                <section className="detailText" aria-label={t.details} lang={lang === "zh" ? "ko" : undefined}>
+                <section className="detailText" aria-label={t.details} lang={koText}>
                   <h3>{t.details}</h3>
                   {place.detailItems.length === 1 ? (
                     <p>{place.detailItems[0]}</p>
@@ -278,7 +363,7 @@ export function PlaceDialog({ place, favorite, open, onClose, onToggleFavorite, 
           {tab === "menu" && (
             <div className="tabPanel" role="tabpanel" id="panel-menu" aria-labelledby="tab-menu">
               {text.menu.length > 0 ? (
-                <ul className="menuList">
+                <ul className="menuList" lang={lang === "zh" && place.zh?.menu ? undefined : koText}>
                   {text.menu.map((item) => (
                     <li key={item}>{item}</li>
                   ))}
@@ -303,14 +388,14 @@ export function PlaceDialog({ place, favorite, open, onClose, onToggleFavorite, 
               <dl className="rows">
                 {text.location && (
                   <Row icon={<MapPin size={16} aria-hidden="true" />} label={t.location}>
-                    <div>{text.location}</div>
+                    <div lang={text.location === place.location ? koText : undefined}>{text.location}</div>
                     {lang === "zh" && text.location !== place.location && place.location && (
                       <div className="rowNote" lang="ko">
                         {place.location}
                       </div>
                     )}
                     {place.locationNotes.map((note) => (
-                      <div key={note} className="rowNote" lang={lang === "zh" ? "ko" : undefined}>
+                      <div key={note} className="rowNote" lang={koText}>
                         {note}
                       </div>
                     ))}
@@ -319,13 +404,15 @@ export function PlaceDialog({ place, favorite, open, onClose, onToggleFavorite, 
                 {text.hours.length > 0 && (
                   <Row icon={<Clock size={16} aria-hidden="true" />} label={t.hours}>
                     {text.hours.map((item) => (
-                      <div key={item}>{item}</div>
+                      <div key={item} lang={lang === "zh" && place.zh?.hours ? undefined : koText}>
+                        {item}
+                      </div>
                     ))}
                   </Row>
                 )}
                 {place.closedDays && (
                   <Row icon={<CalendarX size={16} aria-hidden="true" />} label={t.closedDays}>
-                    <span lang={lang === "zh" ? "ko" : undefined}>{place.closedDays}</span>
+                    <span lang={koText}>{place.closedDays}</span>
                   </Row>
                 )}
                 {!hasMenu && text.price.length > 0 && (
@@ -351,10 +438,13 @@ export function PlaceDialog({ place, favorite, open, onClose, onToggleFavorite, 
                 {place.checkedAt && (
                   <Row icon={<CalendarCheck size={16} aria-hidden="true" />} label={t.checked}>
                     {place.checkedAt}
+                    {place.confirmedAt && <div className="rowNote">{t.confirmBy(place.confirmedAt, place.confirmCount)}</div>}
                   </Row>
                 )}
               </dl>
+              {place.changedAt && <p className="hint">{t.changedNote(place.changedAt)}</p>}
               {mapEnabled && located && <PlaceMiniMap place={place} />}
+              {supabaseEnabled && !place.closed && <ConfirmBox place={place} onConfirmed={onConfirmed} />}
             </div>
           )}
 
@@ -402,7 +492,7 @@ export function PlaceDialog({ place, favorite, open, onClose, onToggleFavorite, 
           </p>
         </div>
 
-        {(place.safeMapUrl || (onShowMap && located) || (onShowCampus && place.campusXY)) && (
+        {(place.safeMapUrl || located || (onShowCampus && place.campusXY)) && (
           <footer className="detailActions glass">
             {onShowMap && located ? (
               <button type="button" className="button primary" onClick={() => onShowMap(place.id)}>
@@ -418,6 +508,14 @@ export function PlaceDialog({ place, favorite, open, onClose, onToggleFavorite, 
                 </button>
               )
             )}
+            {/* 좌표가 있으면 카카오맵 웹에서 그 위치를 연다 (키가 필요 없다) */}
+            {located && (
+              <a className="button" href={kakaoMapLink(place)} target="_blank" rel="noopener noreferrer">
+                <ExternalLink size={16} aria-hidden="true" />
+                {t.kakaoMap}
+              </a>
+            )}
+            {/* 원본 데이터에 들어 있는 지도 링크(네이버 지도 주소) */}
             {place.safeMapUrl && (
               <a className="button" href={place.safeMapUrl} target="_blank" rel="noopener noreferrer">
                 <ExternalLink size={16} aria-hidden="true" />

@@ -1,4 +1,4 @@
-import { ListFilter, RotateCcw, Star } from "lucide-react";
+import { ListFilter, LocateFixed, RotateCcw, School, Share2, Star } from "lucide-react";
 import { foodPhotoUrl } from "../lib/cover";
 import { useLang } from "../lib/i18n";
 import type { CategoryOption } from "../lib/places";
@@ -22,6 +22,18 @@ interface Props {
   openableCount: number;
   hasZones: boolean;
   hasIntl: boolean;
+  // 가까운 순: 거리 기준(학교 / 내 위치)과 위치를 모르는 항목 수
+  near: {
+    origin: "school" | "me";
+    locating: boolean;
+    error: string;
+    unknown: number;
+    onUseMe: () => void;
+    onUseSchool: () => void;
+  };
+  // 내 목록을 고른 상태에서 그 목록을 링크로 공유한다.
+  onShareList: () => void;
+  shareStatus: string;
 }
 
 const FOOD_CATEGORIES = ["", "식당", "카페"];
@@ -35,6 +47,7 @@ export function Controls(props: Props) {
     { value: "rating", label: t.sortRating },
     { value: "name", label: t.sortName },
     { value: "checked", label: t.sortChecked },
+    { value: "near", label: t.sortNear },
   ];
   const campusOptions: { value: Campus; label: string }[] = [
     { value: "", label: t.all },
@@ -146,6 +159,12 @@ export function Controls(props: Props) {
               </select>
             </div>
           )}
+          {filters.list.startsWith("c:") && (
+            <button type="button" className="button small" onClick={props.onShareList}>
+              <Share2 size={15} aria-hidden="true" />
+              {t.shareList}
+            </button>
+          )}
           <button
             type="button"
             className={`button small${advancedCount ? " active" : ""}`}
@@ -173,6 +192,37 @@ export function Controls(props: Props) {
           </button>
         </div>
       </div>
+      {props.shareStatus && (
+        <p className="formNotice" role="status">
+          {props.shareStatus}
+        </p>
+      )}
+
+      {filters.sort === "near" && (
+        <div className="nearBar" role="group" aria-label={t.sortNear}>
+          <p>
+            <strong>{props.near.origin === "me" ? t.nearFromMe : t.nearFromSchool}</strong>
+            {props.near.unknown > 0 && <span className="hint"> {t.nearUnknown(props.near.unknown)}</span>}
+          </p>
+          {props.near.origin === "me" ? (
+            <button type="button" className="button small" onClick={props.near.onUseSchool}>
+              <School size={15} aria-hidden="true" />
+              {t.nearUseSchool}
+            </button>
+          ) : (
+            <button type="button" className="button small" onClick={props.near.onUseMe} disabled={props.near.locating}>
+              <LocateFixed size={15} aria-hidden="true" />
+              {props.near.locating ? t.nearLocating : t.nearUseMe}
+            </button>
+          )}
+          {props.near.error && (
+            <p className="formError" role="alert">
+              {props.near.error}
+            </p>
+          )}
+          <p className="hint">{t.nearPrivacy}</p>
+        </div>
+      )}
 
       {props.panelOpen && (
         <div id="filterPanel" className="filterPanel" role="group" aria-label={t.extraFilters}>

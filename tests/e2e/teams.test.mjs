@@ -23,6 +23,7 @@ describe("중국어(유학생) 모드", () => {
   test("전환하면 화면 문구와 장소 이름이 중국어로 바뀌고 새로고침해도 유지된다", () =>
     run(async (page) => {
       await page.getByRole("button", { name: /^언어/ }).click();
+      await page.locator("#langList").getByRole("button", { name: "中文" }).click();
       await settle(page);
       assert.equal(await page.evaluate(() => document.documentElement.lang), "zh-CN");
       assert.equal(await page.locator("h1").innerText(), "交大校园指南");
@@ -36,6 +37,7 @@ describe("중국어(유학생) 모드", () => {
       await page.waitForSelector("article.card");
       assert.equal(await page.evaluate(() => document.documentElement.lang), "zh-CN");
       await page.getByRole("button", { name: /^语言/ }).click();
+      await page.locator("#langList").getByRole("button", { name: "한국어" }).click();
       await settle(page);
       assert.equal(await page.locator("h1").innerText(), "교통대 꿀팁 모음");
     }));

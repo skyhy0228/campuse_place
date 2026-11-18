@@ -1,7 +1,11 @@
 import type { Filters, Place, PlacesFile, SortKey } from "../types";
+import { latLngFromCampusXY } from "./campus";
 import { toChoseong, isChoseongQuery } from "./choseong";
+import { isStaleDate, latestDate } from "./dates";
 import { openStatus } from "./hours";
 import { DICTS, type Lang } from "./i18n";
+import { compareDistance, distanceMeters, type LatLng } from "./nearby";
+import { applyChanges, groupOverrides, type Override } from "./overrides";
 
 export const assetUrl = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\/+/, "")}`;
 
@@ -20,6 +24,9 @@ export interface PlaceView extends Place {
   // 교통여지도 기본 별점에 회원 별점을 합친 값 (applyRatings)
   rating?: number;
   ratingCount: number;
+  // 회원이 '아직 맞아요'로 확인한 마지막 날과 사람 수 (applyConfirms, 최근 1년)
+  confirmedAt?: string;
+  confirmCount: number;
 }
 
 const CATEGORY_LABELS: Record<string, string> = DICTS.ko.categoryNames;
@@ -63,7 +70,7 @@ export function toView(place: Place, recentFrom: string): PlaceView {
     (item) => normalizeText(item) !== normalizeText(place.summary),
   );
   const menuItems = splitBy(place.menu, /\s*\|\s*|,\s+/);
-  const food = place.foodType ? [DICTS.ko.foodNames[place.foodType], DICTS.zh.foodNames[place.foodType]] : [];
+  const food = place.foodType ? [DICTS.ko.foodNames[place.foodType], DICTS.zh.foodNames[place.foodType], DICTS.en.foodNames[place.foodType]] : [];
   return {
     ...place,
     categoryLabel: label,
@@ -74,7 +81,7 @@ export function toView(place: Place, recentFrom: string): PlaceView {
     priceItems: splitBy(place.price, /\s*\|\s*/),
     detailItems,
     safeMapUrl: isNaverMapUrl(place.mapUrl) ? place.mapUrl : "",
-    // 한국어·중국어 어느 쪽으로 검색해도 찾을 수 있게 번역과 팀원 정리 문구도 넣는다.
+    // 한국어·중국어·영어 어느 쪽으로 검색해도 찾을 수 있게 번역과 팀원 정리 문구도 넣는다.
     haystack: normalizeText(
       [
         place.name,
@@ -83,6 +90,7 @@ export function toView(place: Place, recentFrom: string): PlaceView {
         place.category,
         label,
         DICTS.zh.categoryNames[place.category] ?? "",
+        DICTS.en.categoryNames[place.category] ?? "",
         place.menu,
         place.summary,
         place.details,
@@ -97,6 +105,7 @@ export function toView(place: Place, recentFrom: string): PlaceView {
     choseong: toChoseong([place.name, place.menu].join(" ")),
     rating: place.baseRating,
     ratingCount: 0,
+    confirmCount: 0,
   };
 }
 
@@ -132,6 +141,51 @@ export function applyRatings(places: PlaceView[], stats: RatingStats): PlaceView
   });
 }
 
+// ---------- 운영자가 승인한 정보 수정 ----------
+export function applyOverrides(places: PlaceView[], rows: Override[]): PlaceView[] {
+  if (!rows.length) return places;
+  const grouped = groupOverrides(rows);
+  return places.map((place) => {
+    const list = grouped.get(place.id);
+    if (!list) return place;
+    const changed = list.reduce<Place>((current, item) => applyChanges(current, item.changes, item.reviewedAt), place);
+    // 파생 값(메뉴 목록, 검색어 등)을 다시 만든다. '최근 확인' 표시는 원래 값을 그대로 쓴다.
+    return { ...toView(changed, "9999"), isRecent: place.isRecent };
+  });
+}
+
+// ---------- '아직 맞아요' 확인 ----------
+export type ConfirmStats = Map<string, { count: number; last: string }>;
+
+export function applyConfirms(places: PlaceView[], stats: ConfirmStats): PlaceView[] {
+  if (!stats.size) return places;
+  return places.map((place) => {
+    const s = stats.get(place.id);
+    return s ? { ...place, confirmedAt: s.last, confirmCount: s.count } : place;
+  });
+}
+
+// 원본의 확인한날과 회원이 확인한 날 중 늦은 쪽을 기준으로 오래됐는지 본다.
+export const lastChecked = (place: PlaceView) => latestDate(place.checkedSort, place.confirmedAt);
+export const isPlaceStale = (place: PlaceView, now: Date) => isStaleDate(lastChecked(place), now);
+
+// ---------- 거리 ----------
+// 주소 좌표가 있으면 그것을, 없으면 캠퍼스 지도 위치(건물)를 위도·경도로 바꿔 쓴다.
+export function placeLatLng(place: Place): LatLng | null {
+  if (typeof place.lat === "number" && typeof place.lng === "number") return { lat: place.lat, lng: place.lng };
+  if (place.campusXY) return latLngFromCampusXY(place.campusXY.x, place.campusXY.y);
+  return null;
+}
+
+export function distancesFrom(places: PlaceView[], origin: LatLng): Map<string, number> {
+  const map = new Map<string, number>();
+  for (const place of places) {
+    const at = placeLatLng(place);
+    if (at) map.set(place.id, distanceMeters(origin, at));
+  }
+  return map;
+}
+
 // ---------- 표시 (언어별) ----------
 // knut 번역의 이름은 '中文名 (한국어)' 형식이라, 중국어 화면에서는 괄호 속 한국어를 떼고 따로 보여준다.
 const KOREAN_SUFFIX = /\s*\([^)]*[가-힣][^)]*\)\s*$/;
@@ -141,6 +195,8 @@ export interface PlaceText {
   // 중국어 화면에서 함께 보여 줄 한국어 원래 이름
   nameKo: string;
   translated: boolean;
+  // 화면 언어와 달리 한국어 원문을 보여줄 때 'ko' (화면 읽기 프로그램이 한국어로 읽게 lang 속성에 쓴다)
+  srcLang: "ko" | undefined;
   category: string;
   location: string;
   menu: string[];
@@ -151,6 +207,7 @@ export interface PlaceText {
   food: string;
 }
 
+// 영어 화면은 화면 문구·분류·음식 종류만 번역하고, 장소 이름과 설명은 한국어 원문을 보여준다. (영어 데이터가 없다)
 export function placeText(place: PlaceView, lang: Lang): PlaceText {
   const t = DICTS[lang];
   const zh = lang === "zh" ? place.zh : undefined;
@@ -159,6 +216,7 @@ export function placeText(place: PlaceView, lang: Lang): PlaceText {
     name: zhName || place.name,
     nameKo: zhName ? place.name : "",
     translated: lang === "ko" || Boolean(zhName),
+    srcLang: lang !== "ko" && !zhName ? "ko" : undefined,
     category: t.categoryNames[place.category] ?? place.categoryLabel,
     location: zh?.location || place.location,
     menu: zh?.menu ? splitBy(zh.menu, /\s*[,，、|]\s*/) : place.menuItems,
@@ -194,9 +252,15 @@ export function matchesQuery(place: PlaceView, query: string) {
 
 const byName = (a: PlaceView, b: PlaceView) => a.name.localeCompare(b.name, "ko");
 
-export function sortPlaces(places: PlaceView[], key: SortKey) {
+// distances: 가까운 순(near)일 때 장소 ID → 거리(m). 위치를 모르는 항목은 맨 뒤로 보낸다.
+export function sortPlaces(places: PlaceView[], key: SortKey, distances?: Map<string, number> | null) {
   const sorted = [...places];
   if (key === "name") return sorted.sort(byName);
+  if (key === "near") {
+    return sorted.sort(
+      (a, b) => compareDistance(distances?.get(a.id), distances?.get(b.id)) || b.recommendations - a.recommendations || byName(a, b),
+    );
+  }
   if (key === "rating") {
     // 별점이 없는 항목은 맨 뒤로 보낸다.
     return sorted.sort(
@@ -232,13 +296,13 @@ export function passesFilters(place: PlaceView, filters: Filters, listIds: Set<s
   );
 }
 
-// listIds: 선택한 내 목록(즐겨찾기·컬렉션)에 담긴 장소 ID. 목록을 고르지 않았으면 null.
-export function filterPlaces(places: PlaceView[], filters: Filters, listIds: Set<string> | null, now: Date) {
+// listIds: 선택한 내 목록(즐겨찾기·컬렉션·공유받은 목록)에 담긴 장소 ID. 목록을 고르지 않았으면 null.
+export function filterPlaces(places: PlaceView[], filters: Filters, listIds: Set<string> | null, now: Date, distances?: Map<string, number> | null) {
   const filtered = places.filter(
     (place) =>
       passesFilters(place, filters, listIds, now) &&
       (!filters.food || place.foodType === filters.food) &&
       matchesQuery(place, filters.query),
   );
-  return sortPlaces(filtered, filters.sort);
+  return sortPlaces(filtered, filters.sort, distances);
 }

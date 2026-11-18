@@ -25,7 +25,7 @@
   - 연결하지 못한 항목은 변환 보고서에만 나오고 목록에 추가하지 않습니다 (중복 방지).
 - 가져오지 않은 것:
   - 자취방 시세(민간 매물을 다시 게시하는 문제)
-  - 카카오맵(이 프로젝트는 네이버 지도)
+  - 카카오맵의 명소 제보(지도 길게 누르기) 기능. 지도 자체는 카카오 지도로 옮겼습니다.
   - 네이버 플레이스 사진(knut)
   - 학번+이름 로그인(교통여지도). 비밀번호가 없어 다른 사람이 대신 들어갈 수 있기 때문입니다.
 - 교통여지도의 설명과 리뷰 키워드는 네이버 리뷰를 바탕으로 정리된 내용이라, 화면에 "네이버 플레이스 리뷰 키워드 (교통여지도 정리)"라고 출처를 붙입니다.
@@ -38,27 +38,35 @@
   - **초성 검색**(`ㄱㅌㄷ`)을 지원합니다.
 - 분류 칩(맛집 / 카페 / 교내 시설 / 숨은 장소 / 생활 꿀팁 / 유학생 꿀팁 / 관광지 / 자유 정보)
 - **음식 종류 칩**(짬뽕·짜장, 국밥·찌개, 부리또·바비큐 …)과 **구역**(교통대 앞 / 시내 / 교외)
-- 정렬: 추천수·별점·이름·확인한날
+- 정렬: 추천수·별점·이름·확인한날·**가까운 순**
+  - 가까운 순은 학교(대학로 50)를 기준으로 한 직선거리입니다. '내 위치 기준으로'를 누르면 브라우저 위치를 씁니다.
+  - 내 위치는 화면에서 거리 계산에만 쓰고 저장하거나 보내지 않습니다.
+  - 주소 좌표가 없는 교내 장소는 캠퍼스 지도 위치로 계산합니다. 위치를 모르는 곳은 맨 뒤에 둡니다.
+- **오늘 뭐 먹지?**: 맛집·카페 중 조건(종류, 지금 영업 중, 혼밥, 가격, 구역, 즐겨찾기)에 맞는 곳을 하나 뽑습니다. 최근 5곳은 다시 뽑지 않습니다.
 - 추가 필터: **지금 영업 중**(한국 시간 기준), **유학생 추천**, **교내/교외**, **가격**(표기된 최저가 구간)
 - **강의실 찾기**: `테크노관 213`, `E5-213`을 입력하면 건물과 층, 그 층의 학과를 알려 줍니다. 학과 이름으로도 찾을 수 있습니다.
 - 검색·필터·화면 상태가 주소(`?q=…&food=…&view=campus`)에 담겨 링크로 공유할 수 있습니다.
+- **내 목록 공유**: 내 목록을 고른 상태나 내 계정 화면에서 '목록 공유'를 누르면 링크가 만들어집니다.
+  - 링크에는 목록 이름과 장소 ID만 들어갑니다 (`?list=shared&ln=…&ids=…`). 서버에 저장하지 않습니다.
+  - 받은 사람은 로그인 없이 그 목록을 보고, 로그인하면 내 목록으로 저장할 수 있습니다.
 
 **보기**
-- 홈: 사진 분류 타일, 추천 많은 곳 캐러셀, 카드 목록
+- 홈: 바로 가기(오늘 뭐 먹지 · 오늘의 학식 · 다음 버스 · 장소 제보), 사진 분류 타일, 추천 많은 곳 캐러셀, 카드 목록
+- **오래된 정보**: 마지막으로 확인한 날(원본 확인한날과 회원의 '아직 맞아요' 중 늦은 날)에서 180일이 지나면 카드와 상세에 표시합니다. 날짜가 없는 항목은 판단하지 않습니다.
 - 상세: 대표 사진, 별점·거리·추천 수, 탭(소개 / 메뉴 / 정보 / 후기)
   - 소개: 한줄설명, 자세한 설명, 네이버 리뷰 키워드, 교통여지도 정리
   - 정보: 위치(부가 설명 분리), 운영시간, 휴무일, 혼밥, 작은 지도
   - `#place=<id>` 주소로 공유할 수 있고, ESC·뒤로 가기로 닫습니다.
 - 사진: 실제 사진이 없는 맛집·카페는 음식 종류별 **AI 예시 사진**을 보여주고 "AI 생성 예시 사진" 안내를 붙입니다.
-- **네이버 지도**: 주소로 위치가 특정된 곳에 분류 색 핀을 꽂습니다. 같은 건물은 숫자 핀 하나로 묶습니다. 지도 키가 없으면 숨겨집니다.
+- **카카오 지도**: 주소로 위치가 특정된 곳에 분류 색 핀을 꽂습니다. 같은 건물은 숫자 핀 하나로 묶고, 멀리서 볼 때는 가까운 핀을 숫자 원(클러스터)으로 묶습니다. 상세에는 작은 지도와 "카카오맵" 링크가 있습니다. 지도 키가 없으면 숨겨집니다.
 - **캠퍼스 지도**: 키 없이 항상 동작합니다.
   - 건물 라벨(확대 정도에 따라 숨김), 장소 핀, 버스 정류장
   - 건물을 누르면 층별 안내가 열립니다.
   - 학생 추천 동선을 고르면 경로와 경유지를 그립니다.
-- **한국어 / 中文** 전환:
-  - 장소 이름은 중국어로 보여주고 한국어 원래 이름을 함께 보여줍니다.
-  - "한국어 이름 복사" 버튼이 있습니다.
-  - 번역이 없는 곳은 한국어로 보여주고 "暂无中文"이라고 표시합니다.
+- **한국어 / 中文 / English** 전환 (머리줄의 언어 메뉴):
+  - 중국어: 장소 이름은 중국어로 보여주고 한국어 원래 이름을 함께 보여줍니다. "한국어 이름 복사" 버튼이 있습니다.
+  - 중국어 번역이 없는 곳은 한국어로 보여주고 "暂无中文"이라고 표시합니다.
+  - 영어: 화면 문구·분류·음식 종류만 번역합니다. 장소 이름과 설명은 영어 데이터가 없어 한국어 원문으로 보여주고, 상세에 그 사실을 안내합니다. 영어 분류 이름(`Cafés` 등)으로도 검색됩니다.
 - 반응형 레이아웃:
   - 휴대폰(640px 미만): 하단 탭바(홈·지도·캠퍼스·즐겨찾기·내 정보), 카드 2열
   - 태블릿: 카드 3열
@@ -72,13 +80,23 @@
   - 장소의 기본 별점(교통여지도)을 한 표로 치고, 평가한 사람이 3명 이상이면 회원 별점과 합칩니다.
   - 금칙어를 차단하고, 서로 다른 3명이 신고하면 자동으로 숨깁니다.
 - **제보**(새 장소 / 정보가 달라요):
+  - 새 장소 제보는 첫 화면 바로 가기의 '장소 제보', 검색 결과가 없을 때의 '장소 제보', 바닥글 링크에서 엽니다.
   - 사진은 3장까지 보낼 수 있습니다. 브라우저에서 긴 변 1600px의 webp로 다시 그리므로 촬영 위치 같은 EXIF 정보가 남지 않습니다.
   - 내 위치를 넣을 수 있습니다.
   - 이메일·전화번호는 막고, 1분에 한 번만 보낼 수 있습니다.
+  - '정보가 달라요'는 운영시간·휴무일·가격·대표메뉴·위치를 칸별로 적고, '폐업했어요'를 고를 수 있습니다.
+- **아직 맞아요**: 상세의 정보 탭에서 회원이 정보가 그대로라고 알려 줍니다. 최근 1년의 확인 수와 마지막 날짜를 보여주고, 오래된 정보 판단에 씁니다.
+- **오늘의 학식 · 다음 버스**: 운영자가 관리자 화면에서 입력한 이번 주 학식 메뉴와 버스 시간표를 보여줍니다.
+  - 사이트가 학교 홈페이지를 자동으로 가져오지 않습니다. 입력한 내용이 없으면 일반 회원에게는 바로 가기가 보이지 않습니다.
+  - 버스는 평일/주말/매일로만 나눕니다. 공휴일·방학은 알 수 없으므로 화면에 안내합니다.
 - **관리자 화면**(`?view=admin`, 운영자만):
   - 제보 대기 / 승인 / 거절. '수정 후 승인'을 할 수 있고, 거절하면 사진도 지웁니다.
+  - '정보가 달라요' 제보는 반영할 값을 확인·수정한 뒤 승인하면 **사이트에 바로 반영**됩니다. 운영시간·가격은 변환 스크립트와 같은 규칙으로 다시 해석합니다. 폐업으로 승인하면 목록·지도에서 빠집니다. 승인한 제보를 '내리기'하면 원래 값으로 돌아갑니다.
   - 후기 숨기기·지우기(신고 많은 순), 회원 글쓰기 정지
-- 승인된 새 장소는 목록·지도에 "회원 제보" 배지를 달고 나타납니다. '정보가 달라요' 제보는 운영자가 확인한 뒤 원본 XLSX를 고쳐 반영합니다.
+  - 학식 메뉴·버스 시간표 입력, 통계(회원·후기·제보 수, 최근 30일 많이 본 장소, 즐겨찾기 많은 곳)
+- 승인된 새 장소는 목록·지도에 "회원 제보" 배지를 달고 나타납니다.
+- 원본 XLSX는 그대로 둡니다. 승인된 정보 수정은 화면에서만 덮어쓰므로, 원본을 고친 뒤에는 그 제보를 내려도 됩니다.
+- 조회수는 장소 상세를 연 횟수(같은 탭에서 장소마다 한 번)이며, 로그인 없이 셀 수 있어 참고용입니다. 누가 봤는지는 남기지 않습니다.
 
 **Supabase 없이 (키가 없을 때)**
 - 계정은 이 브라우저의 localStorage에만 저장됩니다.
@@ -99,7 +117,7 @@
 ### 원본을 임의로 보완하지 않습니다
 - 빈 셀을 추측으로 채우지 않습니다. 값이 없는 항목은 화면에서 숨깁니다.
 - 팀원 데이터(구역, 별점, 리뷰 키워드, 번역 등)는 원본 칸을 덮어쓰지 않고 별도 필드로 보여줍니다.
-- 지도 링크는 네이버 지도(`naver.me`, `map.naver.com`)만 사용합니다.
+- 원본 데이터의 지도 링크는 네이버 지도(`naver.me`, `map.naver.com`) 주소만 씁니다. (화면의 지도는 카카오 지도이고, 원본 링크는 "네이버 지도" 버튼으로 그대로 엽니다)
 
 ### 변환 때 하는 정리 (모두 `npm run data` 출력에 건수가 보고됨)
 | 정리 | 내용 |
@@ -120,7 +138,7 @@
 ## 기술 스택
 
 - 화면: React 18, TypeScript, Vite 5, 일반 CSS, Lucide React, Pretendard(가변 글꼴, 저장소에서 함께 배포)
-- 지도: 네이버 지도 JavaScript API v3, Leaflet 1.9(캠퍼스 지도)
+- 지도: 카카오 지도 JavaScript SDK(클러스터러 포함), Leaflet 1.9(캠퍼스 지도)
 - 백엔드: Supabase(Auth·Postgres·RLS·Storage, `@supabase/supabase-js`)
 - 스크립트: SheetJS(`xlsx`, 변환 스크립트 전용), sharp(이미지 스크립트 전용)
 - 테스트: Playwright(`playwright-core`), axe-core
@@ -141,27 +159,32 @@ npm run typecheck    # 타입 검사만
 로컬 설정은 `.env.local`에 씁니다 (커밋하지 않음).
 
 ```dotenv
-VITE_NAVER_MAP_CLIENT_ID=      # 네이버 지도 Client ID (없으면 지도 숨김)
+VITE_KAKAO_MAP_KEY=            # 카카오 지도 JavaScript 키 (없으면 지도 숨김)
 VITE_SUPABASE_URL=             # https://<프로젝트>.supabase.co (없으면 Supabase 기능 끔)
 VITE_SUPABASE_PUBLISHABLE_KEY= # sb_publishable_… (공개용 키)
 ```
 
-### 네이버 지도 키
+### 카카오 지도 키
 
-지도는 [네이버 클라우드 플랫폼](https://console.ncloud.com) Maps의 **Client ID**가 있어야 표시됩니다.
+지도는 [Kakao Developers](https://developers.kakao.com) 앱의 **JavaScript 키**가 있어야 표시됩니다. 지도 구성(클러스터, 카카오맵 링크)은 팀원 프로젝트 교통여지도를 참고했습니다.
 
-1. 콘솔 → Maps → Application 등록에서 **Dynamic Map**을 선택합니다.
-2. Web 서비스 URL에 다음 주소를 등록합니다.
+1. 내 애플리케이션 → 애플리케이션 추가하기로 앱을 만듭니다.
+2. 앱 설정 → **플랫폼 → Web**에 사이트 도메인을 등록합니다. (JavaScript SDK 도메인)
    - `https://skyhy0228.github.io`
    - 개발용 `http://localhost:5173`, `http://localhost:4173`
-3. 배포: 저장소 Settings → Secrets and variables → Actions → **Variables**에 `VITE_NAVER_MAP_CLIENT_ID`를 등록합니다.
+3. 카카오맵 사용 설정이 꺼져 있으면 켭니다. (콘솔 메뉴 이름은 바뀔 수 있습니다)
+4. 앱 키의 **JavaScript 키**를 복사합니다. REST API 키·Admin 키는 쓰지 않습니다.
+5. 배포: 저장소 Settings → Secrets and variables → Actions → **Repository variables**에 `VITE_KAKAO_MAP_KEY`로 등록합니다.
+
+JavaScript 키는 브라우저에 공개되는 값이며, 등록한 도메인에서만 동작합니다. 다른 도메인에서 열면 지도 자리에 도메인 등록 안내가 나옵니다.
 
 ### Supabase 설정 (처음 한 번)
 
 1. [supabase.com](https://supabase.com)에서 새 프로젝트를 만듭니다.
 2. **SQL Editor → New query**에 [`supabase/schema.sql`](supabase/schema.sql)을 **전부** 붙여 넣고 Run합니다. 다시 실행해도 안전합니다. 만들어지는 것은 다음과 같습니다.
-   - 테이블: 프로필, 즐겨찾기, 후기, 신고, 제보, 금칙어
+   - 테이블: 프로필, 즐겨찾기, 후기, 신고, 제보, 금칙어, '아직 맞아요', 조회수, 학식 메뉴, 버스 시간표
    - RLS 정책, 서버 함수, 사진 보관함 `place-photos`
+   - **이미 예전 스키마로 만든 프로젝트도 이 파일을 다시 한 번 전부 실행하세요.** 기존 데이터는 그대로 두고 새 열(`submissions.changes`)·테이블·함수만 더합니다.
 3. 사이트에서 운영자로 쓸 계정을 가입합니다. 그런 다음 SQL Editor에서 아래를 **내 이메일로 바꿔** 한 번 실행합니다. 이메일은 저장소 파일에 쓰지 않습니다.
    ```sql
    insert into public.admins (user_id)
@@ -184,20 +207,22 @@ VITE_SUPABASE_PUBLISHABLE_KEY= # sb_publishable_… (공개용 키)
 ## 테스트
 
 ```powershell
-npm run test:unit    # 데이터 정리 규칙, 팀원 데이터 연결·리뷰 키워드·음식 분류·캠퍼스 투영, 강의실 검색
-npm run build:e2e    # 테스트용 빌드: dist(가짜 지도 키) + dist-cloud(가짜 Supabase 주소)
+npm run test:unit    # 데이터 정리 규칙, 팀원 데이터 연결·리뷰 키워드·음식 분류·캠퍼스 투영, 강의실 검색,
+                     # 랜덤 추천·거리·공유 링크·날짜(오래된 정보)·버스 시간·정보 수정 반영
+npm run build:e2e    # 테스트용 빌드: dist(가짜 지도 키) + dist-cloud(가짜 지도 키·Supabase 주소)
 npm run test:e2e     # 브라우저 테스트(Chrome)
 npm test             # 위 세 가지를 차례로
 ```
 
 브라우저 테스트가 확인하는 것:
-- 검색, 필터, 상세, 네이버 지도, 로컬 계정, 접근성(axe), PWA
+- 검색, 필터, 상세, 카카오 지도, 로컬 계정, 접근성(axe), PWA
 - 팀원 기능: 중국어 모드, 캠퍼스 지도, 강의실 검색, 리뷰 키워드
-- Supabase 흐름
+- 새 기능: 오늘 뭐 먹지, 가까운 순(가짜 위치), 공유받은 목록, 영어 화면, 오래된 정보, 장소 제보 바로 가기 (`tests/e2e/features.test.mjs`)
+- Supabase 흐름: 로그인·후기·제보, 정보 수정 반영, 아직 맞아요, 학식·버스, 관리자 입력·통계
 
 참고:
-- 네이버 지도 스크립트와 Supabase 서버는 가짜로 바꿔 끼워, 실제 키·네트워크 없이 화면 동작과 보내는 요청을 확인합니다 (`tests/e2e/helpers.mjs`, `tests/e2e/cloud.test.mjs`). 그래서 **실제 Supabase의 RLS·함수는 자동 테스트하지 않습니다.** 프로젝트를 만든 뒤 가입 → 후기 → 제보 → 관리자 승인을 한 번 직접 확인하세요.
-- 접근성 테스트는 axe-core(WCAG 2.1 A/AA + 모범 사례, 색 대비 포함)를 실행합니다. 대상은 밝은/어두운 화면의 목록·상세·중국어 화면·캠퍼스 지도·계정 화면입니다.
+- 카카오 지도 SDK와 Supabase 서버는 가짜로 바꿔 끼워, 실제 키·네트워크 없이 화면 동작과 보내는 요청을 확인합니다 (`tests/e2e/helpers.mjs`, `tests/e2e/cloud.test.mjs`). 그래서 **실제 Supabase의 RLS·함수는 자동 테스트하지 않습니다.** 프로젝트를 만든 뒤 가입 → 후기 → 제보 → 관리자 승인을 한 번 직접 확인하세요.
+- 접근성 테스트는 axe-core(WCAG 2.1 A/AA + 모범 사례, 색 대비 포함)를 실행합니다. 대상은 밝은/어두운 화면의 목록·상세·중국어·영어 화면·언어 메뉴·가까운 순·오늘 뭐 먹지·공유 목록·오래된 정보·캠퍼스 지도·계정 화면, 그리고 학식·버스·관리자 화면입니다.
 - GitHub Actions는 `main`에 push할 때마다 테스트를 통과해야 배포합니다.
 
 ## 데이터 변환
@@ -263,16 +288,19 @@ campuse_place/
 ├─ scripts/
 │  ├─ convert-data.mjs                     XLSX + 팀원 데이터 → JSON
 │  ├─ lib/derive.mjs, lib/teams.mjs, lib/food.mjs
-│  ├─ import-teams.mjs, build-e2e-cloud.mjs, sync-images.mjs, make-assets.mjs, log-issue.mjs
+│  ├─ import-teams.mjs, build-e2e.mjs, sync-images.mjs, make-assets.mjs, log-issue.mjs
 ├─ supabase/schema.sql                     Supabase 테이블·RLS·함수·보관함
 ├─ src/
 │  ├─ App.tsx, main.tsx, styles.css, types.ts
-│  ├─ components/  레이아웃(Controls, HomeTiles, TabBar, SideList, LangToggle), 장소(PlaceCard, PlaceDialog, PopularStrip),
+│  ├─ components/  레이아웃(Controls, HomeTiles, QuickBar, TabBar, SideList, LangToggle, SharedListBanner),
+│  │               장소(PlaceCard, PlaceDialog, PopularStrip, RandomPick), 생활(CafeteriaDialog, BusDialog),
 │  │               지도(PlaceMap, PlaceMiniMap, CampusMap, RoomFinder), 회원(CloudAuthDialog, AuthDialog, AccountDialog,
-│  │               CollectionPicker, Reviews, SubmitDialog, AdminPage)
+│  │               CollectionPicker, Reviews, SubmitDialog, AdminPage, AdminData)
 │  └─ lib/         places, i18n, campus·campusData, supabase·remote·submissionPlace, session·auth·userData,
-│                  naverMap·useNaverMap, cover, photo, hours, choseong, urlState, theme, report, useGlassSheen
+│                  kakaoMap·useKakaoMap, cover, photo, hours, choseong, urlState, theme, report, useGlassSheen,
+│                  nearby(거리), pick(랜덤 추천), shareList·share(목록 공유), dates(한국 날짜·오래된 정보),
+│                  bus(버스 시간), overrides(정보 수정 반영)
 └─ tests/
-   ├─ unit/        derive, teams, campus, log-issue
-   └─ e2e/         site, map, auth, a11y, pwa, teams, cloud (+ helpers)
+   ├─ unit/        derive, teams, campus, log-issue, features
+   └─ e2e/         site, map, auth, a11y, pwa, teams, features, cloud (+ helpers)
 ```

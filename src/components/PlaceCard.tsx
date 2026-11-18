@@ -13,9 +13,13 @@ interface Props {
   onToggleFavorite: (id: string) => void;
   // 확인한날로 정렬할 때 카드에 날짜를 보여준다.
   showChecked?: boolean;
+  // 마지막으로 확인한 지 오래된 정보
+  stale?: boolean;
+  // 가까운 순으로 볼 때 계산한 거리 (text: '350m', label: '학교에서 350m')
+  distance?: { text: string; label: string };
 }
 
-export function PlaceCard({ place, favorite, open, onOpen, onToggleFavorite, showChecked = false }: Props) {
+export function PlaceCard({ place, favorite, open, onOpen, onToggleFavorite, showChecked = false, stale = false, distance }: Props) {
   const { lang, t } = useLang();
   const text = placeText(place, lang);
   const cover = coverFor(place, t, text.name);
@@ -35,15 +39,16 @@ export function PlaceCard({ place, favorite, open, onOpen, onToggleFavorite, sho
         <span className="badge">{text.category}</span>
       </div>
       <div className="cardBody">
-        {(open || place.isRecent || place.intl) && (
+        {(open || place.isRecent || place.intl || stale) && (
           <div className="badges">
             {open && <span className="badge open">{t.openStatus}</span>}
             {place.isRecent && <span className="badge recent">{t.recent}</span>}
             {place.intl && <span className="badge intl">{t.intlOnly}</span>}
+            {stale && <span className="badge stale">{t.staleBadge}</span>}
           </div>
         )}
         {/* 제목 버튼이 카드 전체를 덮어 카드 어디를 눌러도 열린다. 접근 가능한 이름은 장소 이름 하나다. */}
-        <h3 className="cardTitle">
+        <h3 className="cardTitle" lang={text.srcLang}>
           <button type="button" className="cardLink" onClick={() => onOpen(place.id)}>
             {text.name}
           </button>
@@ -53,7 +58,11 @@ export function PlaceCard({ place, favorite, open, onOpen, onToggleFavorite, sho
             {text.nameKo}
           </p>
         )}
-        {line && <p className={`cardSummary${place.isFood ? "" : " long"}`}>{line}</p>}
+        {line && (
+          <p className={`cardSummary${place.isFood ? "" : " long"}`} lang={text.srcLang}>
+            {line}
+          </p>
+        )}
       </div>
       <div className="cardFoot">
         <span className="meta">
@@ -64,7 +73,14 @@ export function PlaceCard({ place, favorite, open, onOpen, onToggleFavorite, sho
               {place.rating.toFixed(1)}
             </span>
           )}
-          {place.distanceKm !== undefined && place.distanceKm > 0 && <span>{place.distanceKm}km</span>}
+          {distance ? (
+            <span className="distance" title={distance.label}>
+              <span aria-hidden="true">{distance.text}</span>
+              <span className="srOnly">{distance.label}</span>
+            </span>
+          ) : (
+            place.distanceKm !== undefined && place.distanceKm > 0 && <span>{place.distanceKm}km</span>
+          )}
           <span className="recommend" title={t.recommendations}>
             <ThumbsUp size={13} aria-hidden="true" />
             <span className="srOnly">{t.recommendations} </span>

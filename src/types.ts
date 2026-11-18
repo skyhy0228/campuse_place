@@ -46,6 +46,22 @@ export interface Place {
   campusXY?: { x: number; y: number; building?: string; approx?: boolean };
   // 원본 XLSX 가 아닌 곳에서 온 항목 ('knut' 유학생 꿀팁, 'report' 학생 제보)
   source?: "knut" | "report";
+
+  // ---- 운영자가 승인한 '정보가 달라요' 제보 (src/lib/overrides.ts) ----
+  // 폐업 또는 더 이상 없는 곳. 목록·지도에서 빠지고, 링크로 열면 안내를 보여준다.
+  closed?: boolean;
+  // 제보로 고친 날 (YYYY-MM-DD)
+  changedAt?: string;
+}
+
+// '정보가 달라요' 제보에서 고칠 수 있는 칸. 빈 칸은 보내지 않는다.
+export interface PlaceChanges {
+  hours?: string;
+  closedDays?: string;
+  price?: string;
+  menu?: string;
+  location?: string;
+  closed?: boolean;
 }
 
 export type Zone = "front" | "city" | "suburb";
@@ -72,7 +88,7 @@ export interface PlacesFile {
   places: Place[];
 }
 
-export type SortKey = "recommendations" | "rating" | "name" | "checked";
+export type SortKey = "recommendations" | "rating" | "name" | "checked" | "near";
 
 export interface Filters {
   query: string;

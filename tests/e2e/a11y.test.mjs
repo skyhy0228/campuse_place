@@ -82,6 +82,8 @@ describe("접근성(axe-core)", () => {
       test("중국어(유학생) 모드의 목록과 상세", () =>
         run(async (page) => {
           await page.getByRole("button", { name: /^언어/ }).click();
+          await scan(page, `언어 메뉴 ${scheme}`);
+          await page.locator("#langList").getByRole("button", { name: "中文" }).click();
           await settle(page);
           await scan(page, `중국어 목록 ${scheme}`);
           await cards(page).first().locator(".cardLink").click();
@@ -89,6 +91,39 @@ describe("접근성(axe-core)", () => {
           await settle(page, 300);
           await scan(page, `중국어 상세 ${scheme}`);
         }, options));
+
+      test("영어 화면의 목록과 상세", () =>
+        run(async (page) => {
+          await page.getByRole("button", { name: /^언어/ }).click();
+          await page.locator("#langList").getByRole("button", { name: "English" }).click();
+          await settle(page);
+          await scan(page, `영어 목록 ${scheme}`);
+          await openFirstDetail(page);
+          await scan(page, `영어 상세 ${scheme}`);
+        }, options));
+
+      test("가까운 순과 오늘 뭐 먹지", () =>
+        run(async (page) => {
+          await page.selectOption("#sort", "near");
+          await settle(page);
+          await scan(page, `가까운 순 ${scheme}`);
+          await page.getByRole("button", { name: "오늘 뭐 먹지?" }).click();
+          await page.getByRole("dialog", { name: "오늘 뭐 먹지?" }).locator(".pickCard").waitFor();
+          await settle(page, 300);
+          await scan(page, `오늘 뭐 먹지 ${scheme}`);
+        }, options));
+
+      test("공유받은 목록과 오래된 정보 안내", () => {
+        const stale = places.find((p) => p.checkedSort && p.checkedSort < "2026-01-01");
+        return run(async (page) => {
+          await page.getByRole("region", { name: /주말/ }).waitFor();
+          await scan(page, `공유 목록 ${scheme}`);
+          await cards(page).first().locator(".cardLink").click();
+          await page.locator(".warnNote").waitFor();
+          await settle(page, 300);
+          await scan(page, `오래된 정보 상세 ${scheme}`);
+        }, { ...options, clock: new Date("2026-11-17T03:00:00Z"), url: `?list=shared&ln=${encodeURIComponent("주말")}&ids=${stale.id}` });
+      });
 
       test("캠퍼스 지도와 층별 안내", () =>
         run(async (page) => {

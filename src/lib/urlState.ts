@@ -1,6 +1,7 @@
 import { DEFAULT_FILTERS, type Campus, type Filters, type PriceBand, type SortKey, type Zone } from "../types";
+import { writeSharedList, type SharedList } from "./shareList";
 
-const SORTS: SortKey[] = ["recommendations", "rating", "name", "checked"];
+const SORTS: SortKey[] = ["recommendations", "rating", "name", "checked", "near"];
 const CAMPUS: Campus[] = ["in", "out"];
 const PRICES: PriceBand[] = ["free", "under10", "10to20", "over20"];
 const ZONES: Zone[] = ["front", "city", "suburb"];
@@ -33,12 +34,14 @@ export function filtersFromSearch(search: string): Filters {
 }
 
 // 기본값과 다른 항목만 담아 짧은 주소를 만든다. 보기 방식도 함께 담는다.
-export function filtersToSearch(filters: Filters, view: View = "list"): string {
+// shared: 공유받은 목록을 보고 있으면 그 목록(이름·장소 ID)도 주소에 남겨 새로고침해도 유지한다.
+export function filtersToSearch(filters: Filters, view: View = "list", shared: SharedList | null = null): string {
   const params = new URLSearchParams();
   if (filters.query) params.set("q", filters.query);
   if (filters.category) params.set("cat", filters.category);
   if (filters.sort !== DEFAULT_FILTERS.sort) params.set("sort", filters.sort);
   if (filters.list) params.set("list", filters.list);
+  if (filters.list === "shared" && shared) writeSharedList(params, shared);
   if (filters.openNow) params.set("open", "1");
   if (filters.campus) params.set("campus", filters.campus);
   if (filters.price) params.set("price", filters.price);

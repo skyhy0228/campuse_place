@@ -1,8 +1,8 @@
-// 지도 보기 테스트. 네이버 지도 스크립트는 helpers 의 가짜 스크립트로 바뀌어 핀이 .fakeMarker 버튼으로 그려진다.
+// 지도 보기 테스트. 카카오 지도 SDK 는 helpers 의 가짜 스크립트로 바뀌어 핀이 .fakeMarker 버튼으로 그려진다.
 // 지도 키를 넣어 빌드해야 지도 버튼이 보이므로 npm run build:e2e 로 빌드한 dist 에서 실행한다.
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
-import { FAKE_NAVER_MAPS, NAVER_MAPS_URL, cards, chip, launchBrowser, places, settle, startServer, withPage } from "./helpers.mjs";
+import { KAKAO_SDK_URL, cards, chip, launchBrowser, places, settle, startServer, withPage } from "./helpers.mjs";
 
 let server;
 let browser;
@@ -130,22 +130,38 @@ describe("지도 보기", () => {
         if (!(await hasMap(page))) return t.skip("지도 키 없이 빌드된 dist 입니다.");
         await page.getByRole("tab", { name: "정보" }).click();
         await page.locator("dialog[open] .miniMap .fakeMarker").waitFor();
+        // 좌표가 있으면 카카오맵 웹으로 그 위치를 여는 링크가 있다.
+        const link = page.locator("dialog[open]").getByRole("link", { name: "카카오맵" });
+        assert.equal(
+          await link.getAttribute("href"),
+          `https://map.kakao.com/link/map/${encodeURIComponent(located[0].name)},${located[0].lat},${located[0].lng}`,
+        );
         await page.evaluate((id) => (location.hash = `#place=${id}`), unlocated[0].id);
         await page.locator("dialog[open] h2", { hasText: unlocated[0].name }).waitFor();
         await page.getByRole("tab", { name: "정보" }).click();
         assert.equal(await page.locator("dialog[open] .miniMap").count(), 0);
+        assert.equal(await page.locator("dialog[open]").getByRole("link", { name: "카카오맵" }).count(), 0);
       },
       { url: `#place=${located[0].id}` },
     ));
 
-  test("지도 인증에 실패하면 원인을 안내한다", (t) =>
-    run(async (page) => {
-      await page.route(NAVER_MAPS_URL, (route) =>
-        route.fulfill({ contentType: "text/javascript", body: `${FAKE_NAVER_MAPS}\nsetTimeout(() => window.navermap_authFailure?.(), 0);` }),
-      );
-      if (!(await openMap(page, t))) return;
-      const alert = page.locator(".mapOverlay.error");
-      await alert.waitFor();
-      assert.match(await alert.innerText(), /인증에 실패/);
-    }));
+  test("지도 SDK 를 불러오지 못하면 도메인 등록을 안내하고 다시 시도할 수 있다", (t) =>
+    run(
+      async (page) => {
+        // 등록하지 않은 도메인처럼 SDK 요청이 실패하게 한다.
+        await page.route(KAKAO_SDK_URL, (route) => route.abort());
+        if (!(await hasMap(page))) return t.skip("지도 키 없이 빌드된 dist 입니다.");
+        await nav(page).getByRole("button", { name: "지도", exact: true }).click();
+        const alert = page.locator(".mapOverlay.error");
+        await alert.waitFor();
+        assert.match(await alert.innerText(), /JavaScript SDK 도메인/);
+
+        // SDK 가 다시 응답하면 '다시 시도'로 지도를 불러온다.
+        await page.unroute(KAKAO_SDK_URL);
+        await page.getByRole("button", { name: "다시 시도" }).click();
+        await page.waitForSelector(".mapCanvas .fakeMarker");
+      },
+      // SDK 요청 실패는 의도한 것이라 콘솔 오류를 검사하지 않는다.
+      { checkErrors: false },
+    ));
 });

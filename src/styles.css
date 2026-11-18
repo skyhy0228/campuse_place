@@ -246,7 +246,7 @@ a { color: var(--accent-strong); }
   color: var(--on-accent);
   box-shadow: 0 6px 16px var(--accent-glow);
 }
-.brand h1 { font-size: 1.3rem; font-weight: 700; line-height: 1.2; white-space: nowrap; }
+.brand h1 { font-size: 1.3rem; font-weight: 700; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .brand p { font-size: 0.8rem; color: var(--muted); }
 .headerActions { display: flex; flex: none; align-items: center; gap: 2px; }
 .headerActions .iconButton { width: 40px; height: 40px; }
@@ -326,6 +326,8 @@ a { color: var(--accent-strong); }
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--muted);
+  /* 'Downtown' 같은 낱말이 글자 단위로 끊기지 않게 한다 */
+  overflow-wrap: normal;
 }
 .segmented button[aria-pressed="true"],
 .segmented button[aria-current="page"],
@@ -841,6 +843,122 @@ select {
 .roomCard { display: grid; gap: 6px; padding: 12px 14px; border-radius: var(--r-lg); }
 .roomCard h2 { font-size: 1rem; }
 
+/* ---------- 언어 메뉴 ---------- */
+.langMenu { position: relative; }
+.langList {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 30;
+  display: grid;
+  min-width: 140px;
+  padding: 6px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: 0 12px 30px -10px var(--shadow), inset 0 0 0 1px var(--line-soft);
+}
+.langList button { width: 100%; min-height: 40px; padding: 6px 12px; border: 0; border-radius: var(--radius); background: transparent; text-align: left; font-weight: 600; }
+.langList button:hover { background: var(--hover); }
+.langList button[aria-current="true"] { background: var(--accent-soft); color: var(--accent-strong); }
+
+/* ---------- 첫 화면 바로 가기 ---------- */
+.quickBar ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.quickItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: var(--r-lg);
+  text-align: left;
+  color: var(--text);
+}
+.quickItem:hover { box-shadow: inset 0 0 0 1.5px var(--accent), 0 10px 24px -18px var(--shadow); }
+.quickIcon { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: var(--accent-soft); color: var(--accent-strong); }
+.quickText { display: grid; min-width: 0; }
+.quickText strong { font-size: 0.95rem; line-height: 1.25; }
+.quickHint { color: var(--muted); font-size: 0.78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- 오늘 뭐 먹지 ---------- */
+.pickResult { margin-top: 4px; }
+.pickCard { display: grid; overflow: hidden; border-radius: var(--r-lg); background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line-soft); }
+.pickMedia { position: relative; aspect-ratio: 16 / 9; display: grid; place-items: center; background: var(--cat-bg); color: var(--cat-fg); overflow: hidden; }
+.pickBody { display: grid; gap: 4px; padding: 12px 14px 14px; }
+.pickBody h3 { font-size: 1.25rem; line-height: 1.3; }
+.pickEmpty { padding: 28px 12px; border-radius: var(--r-lg); background: var(--surface-2); color: var(--muted); text-align: center; }
+.pickActions { margin-top: 12px; }
+.pickActions .button { flex: 1 1 auto; }
+.pickFilters { display: grid; gap: 10px; margin: 16px 0 0; padding: 14px 0 0; border: 0; border-top: 1px solid var(--line-soft); }
+.pickFilters legend { padding: 0; font-size: 0.88rem; font-weight: 700; }
+.chipRow.wrap { flex-wrap: wrap; overflow: visible; margin: 0; padding: 0; -webkit-mask-image: none; mask-image: none; }
+
+/* ---------- 학식 · 버스 ---------- */
+.dialog.infoDialog { width: min(640px, calc(100vw - 24px)); }
+.emptyNote { padding: 24px 12px; border-radius: var(--r-md); background: var(--surface-2); color: var(--muted); text-align: center; }
+.dayRow { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin: 4px 0 14px; }
+.dayButton { display: grid; justify-items: center; gap: 0; min-height: 48px; padding: 4px 2px; border: 0; border-radius: var(--radius); background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line-soft); font-weight: 700; font-size: 0.86rem; }
+.dayButton small { color: var(--muted); font-size: 0.72rem; font-weight: 500; }
+.dayButton.empty { color: var(--muted); }
+.dayButton[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); box-shadow: 0 4px 12px var(--accent-glow); }
+.dayButton[aria-pressed="true"] small { color: inherit; opacity: 0.9; }
+.menuBoard { display: grid; gap: 16px; }
+.menuPlace { display: grid; gap: 8px; }
+.menuPlace h4 { font-size: 1rem; }
+.mealGrid { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+.mealCard { display: grid; gap: 6px; align-content: start; padding: 12px; border-radius: var(--r-md); background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line-soft); }
+.mealCard h5 { margin: 0; color: var(--accent-strong); font-size: 0.86rem; }
+:root:not([data-theme="dark"]) .mealCard h5 { color: var(--accent); }
+.mealItems { display: grid; gap: 2px; font-size: 0.92rem; }
+.busLine { display: grid; gap: 8px; margin-bottom: 16px; }
+.busLine h3, .busOtherItem h3 { font-size: 1rem; }
+.busRows { display: grid; gap: 8px; }
+.busRow { display: grid; gap: 8px; padding: 12px; border-radius: var(--r-md); background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line-soft); }
+.busHead { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.busNext { display: flex; flex-wrap: wrap; gap: 6px; }
+.busTime { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; border-radius: var(--r-pill); background: var(--surface); box-shadow: inset 0 0 0 1px var(--border); font-weight: 700; font-variant-numeric: tabular-nums; }
+.busTime.first { background: var(--accent-soft); color: var(--accent-strong); box-shadow: none; }
+.busTime small { font-size: 0.76rem; font-weight: 600; }
+.busAll summary, .busOther summary { cursor: pointer; color: var(--muted); font-size: 0.86rem; font-weight: 600; }
+.busTimes { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 6px; font-variant-numeric: tabular-nums; font-size: 0.9rem; }
+.busTimes .past { color: var(--muted); text-decoration: line-through; }
+.busOther { margin: 4px 0 12px; }
+.busOther > .busRows { margin-top: 8px; }
+.busOtherItem { display: grid; gap: 6px; }
+
+/* ---------- 공유받은 목록 · 가까운 순 ---------- */
+.sharedBanner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px; border-radius: var(--r-lg); }
+.sharedText { display: grid; gap: 2px; min-width: 0; }
+.sharedText h2 { font-size: 1.15rem; }
+.sharedText .count { color: var(--muted); font-size: 0.9rem; font-weight: 600; }
+.sharedText .eyebrow { color: var(--accent-strong); }
+:root:not([data-theme="dark"]) .sharedText .eyebrow { color: var(--accent); }
+.nearBar { display: grid; gap: 8px; justify-items: start; padding: 12px 14px; border-radius: var(--r-lg); background: var(--glass-a); box-shadow: inset 0 0 0 1px var(--border); }
+.nearBar p { font-size: 0.88rem; }
+.meta .distance { font-weight: 700; color: var(--text); }
+
+/* ---------- 오래된 정보 · 폐업 · 아직 맞아요 ---------- */
+.badge.stale { background: var(--warn-bg); color: var(--warn-fg); }
+.badge.closed { background: var(--danger); color: var(--surface); }
+.warnNote { display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border-radius: var(--r-md); background: var(--warn-bg); color: var(--warn-fg); font-size: 0.88rem; font-weight: 600; }
+.warnNote svg { flex: none; margin-top: 2px; }
+.confirmBox { display: grid; gap: 8px; padding: 12px 14px; border-radius: var(--r-md); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-soft); }
+.confirmBox .formNotice { margin-top: 0; }
+.changeFields { display: grid; gap: 10px; margin: 0; padding: 12px; border: 0; border-radius: var(--r-md); background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line-soft); }
+.changeFields legend { float: left; width: 100%; padding: 0; margin-bottom: 2px; font-size: 0.88rem; font-weight: 700; }
+.changeFields .field input { background: var(--surface); }
+
+/* ---------- 관리자: 학식·버스·통계 ---------- */
+.adminData { display: grid; gap: 14px; }
+.statTiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.statTiles li { display: grid; gap: 2px; padding: 14px; border-radius: var(--r-lg); }
+.statTiles strong { font-size: 1.4rem; font-variant-numeric: tabular-nums; }
+.rankList { display: grid; gap: 4px; margin: 0; padding-left: 22px; }
+.rankList li { display: list-item; }
+.rankList li span:first-child { font-weight: 600; }
+.rankList .count { margin-left: 8px; color: var(--muted); font-size: 0.85rem; }
+
 /* ---------- 바닥글 ---------- */
 .siteFoot { display: grid; gap: 4px; padding-top: 8px; color: var(--muted); font-size: 0.82rem; }
 
@@ -850,6 +968,7 @@ select {
   .main { padding-left: 24px; padding-right: 24px; }
   .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
   .tiles { grid-template-columns: repeat(3, minmax(0, 200px)); }
+  .quickBar ul { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
   .popularList { margin: 0 -24px; padding: 4px 24px 12px; }
   .popularList li { width: min(60%, 560px); }
   .foodChips { margin: 0 -24px; padding: 2px 24px 8px; }
@@ -915,6 +1034,7 @@ select {
   .brandMark { width: 36px; height: 36px; }
   .headerActions .iconButton { width: 40px; height: 40px; }
   .account .accountName { display: none; }
+  .segmented.full button { padding: 4px 6px; }
 
   /* 분류 칩은 한 줄로 두고 옆으로 넘겨 본다 (페이지 전체가 가로로 밀리지는 않는다) */
   .chipRow {

@@ -1,6 +1,8 @@
 // 브라우저 테스트 공통 도구: 빌드 결과(dist)를 Vite preview 로 띄우고 Chrome 으로 접속한다.
 // 사용: npm run test:e2e  (먼저 npm run build 가 필요하다)
+import assert from "node:assert/strict";
 import fs from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright-core";
@@ -25,33 +27,36 @@ export const launchBrowser = () =>
     headless: true,
   });
 
-// 네이버 지도 API 대신 쓰는 가짜 스크립트. 실제 키·네트워크 없이 핀 구성과 화면 동작을 확인한다.
-// 지도는 컨테이너 안의 .fakeMap 으로, 핀은 aria-label 이 붙은 .fakeMarker 버튼으로 그린다.
-export const FAKE_NAVER_MAPS = `(() => {
-  const Event = {
-    addListener(target, name, fn) { const l = { target, name, fn }; (target.__listeners ??= []).push(l); return l; },
-    removeListener(l) { l.target.__listeners = (l.target.__listeners || []).filter((x) => x !== l); },
-    trigger(target, name) { (target.__listeners || []).filter((l) => l.name === name).forEach((l) => l.fn()); },
+// 카카오 지도 SDK 대신 쓰는 가짜 스크립트. 실제 키·네트워크 없이 핀 구성과 화면 동작을 확인한다.
+// 지도는 컨테이너 안의 .fakeMap 으로, 핀은 aria-label 이 붙은 .fakeMarker 버튼으로 그린다. 클러스터러는 핀을 묶지 않고 그대로 그린다.
+export const FAKE_KAKAO_MAPS = `(() => {
+  const event = {
+    addListener(target, type, fn) { (target.__listeners ??= []).push({ type, fn }); },
+    removeListener(target, type, fn) { target.__listeners = (target.__listeners || []).filter((l) => !(l.type === type && l.fn === fn)); },
+    trigger(target, type) { (target.__listeners || []).filter((l) => l.type === type).forEach((l) => l.fn()); },
   };
-  class LatLng { constructor(lat, lng) { this.lat = lat; this.lng = lng; } }
-  class LatLngBounds { constructor(sw, ne) { this.sw = sw; this.ne = ne; } }
+  class LatLng { constructor(lat, lng) { this.lat = lat; this.lng = lng; } getLat() { return this.lat; } getLng() { return this.lng; } }
+  class LatLngBounds { constructor() { this.points = []; } extend(p) { this.points.push(p); } }
   class Point { constructor(x, y) { this.x = x; this.y = y; } }
   class Size { constructor(w, h) { this.width = w; this.height = h; } }
+  class MarkerImage { constructor(src, size, options) { this.src = src; this.size = size; this.options = options; } }
+  class ZoomControl {}
   class Map {
     constructor(container, options) {
       this.el = document.createElement("div");
       this.el.className = "fakeMap";
       this.el.style.cssText = "position:absolute;inset:0";
-      this.el.addEventListener("click", () => Event.trigger(this, "click"));
+      this.el.addEventListener("click", () => event.trigger(this, "click"));
       container.appendChild(this.el);
       this.center = options.center;
-      this.zoom = options.zoom;
+      this.level = options.level;
     }
     setCenter(c) { this.center = c; }
-    setZoom(z) { this.zoom = z; }
-    fitBounds(b) { this.bounds = b; }
-    autoResize() {}
-    destroy() { this.el.remove(); }
+    getLevel() { return this.level; }
+    setLevel(level) { this.level = level; }
+    setBounds(b) { this.bounds = b; }
+    relayout() {}
+    addControl() {}
   }
   class Marker {
     constructor(o) {
@@ -59,21 +64,28 @@ export const FAKE_NAVER_MAPS = `(() => {
       this.el.type = "button";
       this.el.className = "fakeMarker";
       this.el.setAttribute("aria-label", o.title);
-      this.el.addEventListener("click", (e) => { e.stopPropagation(); Event.trigger(this, "click"); });
+      this.el.addEventListener("click", (e) => { e.stopPropagation(); event.trigger(this, "click"); });
       this.setMap(o.map);
     }
     setMap(map) { this.el.remove(); if (map) map.el.appendChild(this.el); }
   }
-  window.naver = { maps: { Map, Marker, LatLng, LatLngBounds, Point, Size, Event, Position: { TOP_RIGHT: 3 } } };
+  class MarkerClusterer {
+    constructor(o) { this.map = o.map; this.markers = []; }
+    addMarkers(list) { list.forEach((m) => { m.setMap(this.map); this.markers.push(m); }); }
+    clear() { this.markers.forEach((m) => m.setMap(null)); this.markers = []; }
+    setMap(map) { this.map = map; }
+  }
+  const maps = { Map, Marker, MarkerImage, MarkerClusterer, ZoomControl, LatLng, LatLngBounds, Point, Size, event, ControlPosition: { RIGHT: 6 }, load(cb) { setTimeout(cb, 0); } };
+  window.kakao = { maps };
 })();`;
-export const NAVER_MAPS_URL = /^https:\/\/oapi\.map\.naver\.com\//;
+export const KAKAO_SDK_URL = /^https:\/\/dapi\.kakao\.com\//;
 
 // 새 브라우저 컨텍스트에서 테스트 본문을 실행하고, 끝나면 콘솔 오류가 없었는지 확인한다.
 export async function withPage(browser, fn, options = {}) {
   // ready: 첫 화면이 준비됐다고 볼 요소 (캠퍼스 지도처럼 카드가 없는 화면으로 바로 열 때 바꾼다)
   const { viewport = { width: 1440, height: 900 }, url = "", serviceWorkers = "block", checkErrors = true, clock, ready = "article.card", ...rest } = options;
   const context = await browser.newContext({ viewport, locale: "ko-KR", serviceWorkers, permissions: ["clipboard-read", "clipboard-write"], ...rest });
-  await context.route(NAVER_MAPS_URL, (route) => route.fulfill({ contentType: "text/javascript", body: FAKE_NAVER_MAPS }));
+  await context.route(KAKAO_SDK_URL, (route) => route.fulfill({ contentType: "text/javascript", body: FAKE_KAKAO_MAPS }));
   const page = await context.newPage();
   const errors = [];
   page.on("console", (message) => message.type() === "error" && errors.push(message.text()));
@@ -97,6 +109,19 @@ export async function withPage(browser, fn, options = {}) {
 export const cards = (page) => page.locator("article.card");
 export const resultCount = async (page) => Number((await page.locator(".resultCount strong").textContent()).trim());
 export const settle = (page, ms = 350) => page.waitForTimeout(ms);
+
+// axe-core 로 현재 화면의 접근성(WCAG 2.1 A/AA, 색 대비, 모범 사례)을 검사한다. (a11y.test.mjs 와 같은 규칙)
+const axePath = createRequire(import.meta.url).resolve("axe-core/axe.min.js");
+export async function axeScan(page, label) {
+  await page.addScriptTag({ path: axePath });
+  const violations = await page.evaluate(async () => {
+    const result = await window.axe.run(document, {
+      runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"] },
+    });
+    return result.violations.map((v) => ({ id: v.id, help: v.help, targets: v.nodes.slice(0, 3).map((n) => n.target.join(" ")) }));
+  });
+  assert.deepEqual(violations, [], `${label}: 접근성 위반 ${violations.length}건\n${JSON.stringify(violations, null, 2)}`);
+}
 
 // 분류 칩 (카드 버튼과 이름이 겹치지 않게 칩 줄 안에서만 찾는다)
 export const chip = (page, label) => page.locator(".chipRow .chip").filter({ hasText: new RegExp(`^${label}`) });

@@ -1,7 +1,9 @@
-import { Download, LogOut, Pencil, Plus, ShieldCheck, Trash2, Upload, X } from "lucide-react";
+import { Download, LogOut, Pencil, Plus, Share2, ShieldCheck, Trash2, Upload, X } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { listMySubmissions, type Submission } from "../lib/remote";
-import { MAX_COLLECTIONS, MAX_COLLECTION_NAME } from "../lib/userData";
+import { shareLink, siteBase } from "../lib/share";
+import { sharedListUrl } from "../lib/shareList";
+import { MAX_COLLECTIONS, MAX_COLLECTION_NAME, type Collection } from "../lib/userData";
 import { useSession } from "../lib/session";
 import { Modal } from "./Modal";
 
@@ -131,6 +133,16 @@ export function AccountDialog({ onAdmin }: { onAdmin?: () => void }) {
     if (fileRef.current) fileRef.current.value = "";
   };
 
+  // 목록 이름과 장소 ID 만 담은 링크를 만든다. (받는 사람은 로그인하지 않아도 볼 수 있다)
+  const shareCollection = async (c: Collection) => {
+    if (!c.placeIds.length) {
+      setMessage(`'${c.name}' 목록이 비어 있습니다.`);
+      return;
+    }
+    const result = await shareLink(sharedListUrl(siteBase(), { name: c.name, ids: c.placeIds }), c.name, "링크를 복사하세요");
+    if (result === "copied") setMessage(`'${c.name}' 목록 링크를 복사했습니다.`);
+  };
+
   const removeAccount = async (event: FormEvent) => {
     event.preventDefault();
     setError("");
@@ -163,7 +175,7 @@ export function AccountDialog({ onAdmin }: { onAdmin?: () => void }) {
 
         <section className="accountSection" aria-labelledby="listsTitle">
           <h3 id="listsTitle">내 목록</h3>
-          <p className="hint">장소 상세 화면의 &lsquo;내 목록에 담기&rsquo;로 원하는 곳을 모아두고, 메인 화면에서 목록별로 볼 수 있습니다.</p>
+          <p className="hint">장소 상세 화면의 &lsquo;내 목록에 담기&rsquo;로 원하는 곳을 모아두고, 메인 화면에서 목록별로 볼 수 있습니다. 공유 버튼을 누르면 목록 이름과 장소만 담긴 링크가 만들어집니다.</p>
           <ul className="collectionList">
             <li>
               <span>즐겨찾기</span>
@@ -193,6 +205,9 @@ export function AccountDialog({ onAdmin }: { onAdmin?: () => void }) {
                     <span>{c.name}</span>
                     <span className="count">{c.placeIds.length}곳</span>
                     <span className="actions">
+                      <button type="button" className="iconButton" aria-label={`${c.name} 목록 공유`} title="목록 공유" onClick={() => void shareCollection(c)}>
+                        <Share2 size={16} aria-hidden="true" />
+                      </button>
                       <button type="button" className="iconButton" aria-label={`${c.name} 이름 변경`} onClick={() => { setEditingId(c.id); setEditName(c.name); }}>
                         <Pencil size={16} aria-hidden="true" />
                       </button>

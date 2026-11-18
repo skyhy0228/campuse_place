@@ -11,7 +11,7 @@
     "data:all": "npm run images && npm run data",
     "prebuild": "npm run data",
     "build": "tsc --noEmit && vite build",
-    "build:e2e": "npm run data && tsc --noEmit && vite build --mode e2e && node scripts/build-e2e-cloud.mjs",
+    "build:e2e": "npm run data && tsc --noEmit && node scripts/build-e2e.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "assets": "node scripts/make-assets.mjs",

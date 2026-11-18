@@ -3,9 +3,9 @@
 --         여러 번 다시 실행해도 안전하다. (테이블은 있으면 그대로 두고, 함수·정책은 새로 만든다)
 --
 -- 권한은 화면이 아니라 여기(RLS)가 지킨다.
--- - 누구나: 승인된 제보, 숨기지 않은 후기와 별점 통계 읽기
--- - 회원(이메일 로그인): 내 즐겨찾기·목록 읽기/쓰기, 후기 남기기·고치기·지우기·신고, 제보(사진 3장까지)
--- - 운영자(admins 표에 등록된 회원): 제보 승인·수정·거절, 후기 숨기기·지우기, 회원 글쓰기 정지
+-- - 누구나: 승인된 제보와 정보 수정, 숨기지 않은 후기와 별점 통계, '아직 맞아요' 통계, 학식·버스 시간표 읽기
+-- - 회원(이메일 로그인): 내 즐겨찾기·목록 읽기/쓰기, 후기 남기기·고치기·지우기·신고, 제보(사진 3장까지), '아직 맞아요'
+-- - 운영자(admins 표에 등록된 회원): 제보 승인·수정·거절, 후기 숨기기·지우기, 회원 글쓰기 정지, 학식·버스 입력, 통계
 -- 쓰기는 대부분 security definer 함수로만 받아 금칙어·속도 제한·정지 여부를 서버에서 확인한다.
 -- 함수는 search_path 를 비워 두고 모든 이름을 스키마와 함께 쓴다.
 --
@@ -390,6 +390,11 @@ create table if not exists public.submissions (
   reviewed_at timestamptz
 );
 create index if not exists submissions_status_idx on public.submissions (status, created_at desc);
+-- '정보가 달라요' 제보의 바뀐 값. 운영자가 승인하면 place_overrides() 로 사이트에 바로 반영된다. (나중에 추가된 열)
+alter table public.submissions add column if not exists changes jsonb;
+alter table public.submissions drop constraint if exists submissions_changes_check;
+alter table public.submissions add constraint submissions_changes_check
+  check (changes is null or (jsonb_typeof(changes) = 'object' and pg_column_size(changes) < 4096));
 alter table public.submissions enable row level security;
 revoke all on public.submissions from anon, authenticated;
 grant select (id, nickname, kind, place_id, name, category, location, body, map_url, lat, lng, photos, status, created_at, reviewed_at)
@@ -424,6 +429,55 @@ drop trigger if exists submissions_touch on public.submissions;
 create trigger submissions_touch before update on public.submissions
   for each row execute function public.submissions_touch();
 
+-- 바뀐 값은 정해진 칸만 받는다: 글자 칸(운영시간·휴무일·가격·대표메뉴·위치)은 200자 이하, closed 는 true 일 때만.
+create or replace function public.clean_changes(p jsonb)
+returns jsonb
+language plpgsql
+immutable
+set search_path = ''
+as $$
+declare
+  k text;
+  v text;
+  result jsonb := '{}'::jsonb;
+begin
+  if p is null or jsonb_typeof(p) <> 'object' then
+    return null;
+  end if;
+  foreach k in array array['hours', 'closedDays', 'price', 'menu', 'location'] loop
+    if jsonb_typeof(p -> k) = 'string' then
+      v := btrim(p ->> k);
+      if v <> '' then
+        result := result || jsonb_build_object(k, left(v, 200));
+      end if;
+    end if;
+  end loop;
+  if (p -> 'closed') = 'true'::jsonb then
+    result := result || '{"closed": true}'::jsonb;
+  end if;
+  return nullif(result, '{}'::jsonb);
+end;
+$$;
+revoke all on function public.clean_changes(jsonb) from public, anon, authenticated;
+
+-- 회원이 보내든 운영자가 고치든, 저장하기 전에 바뀐 값을 거른다. 새 장소 제보에는 쓰지 않는다.
+-- 운영자가 화면에서 직접 고칠 때도 clean_changes 를 부를 수 있게 security definer 로 둔다. (clean_changes 는 직접 부를 수 없다)
+create or replace function public.submissions_clean()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  new.changes := case when new.kind = 'fix' then public.clean_changes(new.changes) else null end;
+  return new;
+end;
+$$;
+revoke all on function public.submissions_clean() from public, anon, authenticated;
+drop trigger if exists submissions_clean on public.submissions;
+create trigger submissions_clean before insert or update on public.submissions
+  for each row execute function public.submissions_clean();
+
 create or replace function public.submission_create(p jsonb)
 returns uuid
 language plpgsql
@@ -441,7 +495,7 @@ begin
       raise exception '사진 경로가 올바르지 않아요.' using errcode = 'P0001';
     end if;
   end loop;
-  if public.has_profanity(coalesce(p ->> 'name', '') || ' ' || coalesce(p ->> 'body', '') || ' ' || coalesce(p ->> 'location', '')) then
+  if public.has_profanity(coalesce(p ->> 'name', '') || ' ' || coalesce(p ->> 'body', '') || ' ' || coalesce(p ->> 'location', '') || ' ' || coalesce(p ->> 'changes', '')) then
     raise exception '제보에 쓸 수 없는 말이 들어 있어요.' using errcode = 'P0001';
   end if;
   if (select count(*) from public.submissions where user_id = me.id and created_at > now() - interval '10 minutes') >= 5 then
@@ -450,7 +504,7 @@ begin
   if (select count(*) from public.submissions where status = 'pending' and created_at > now() - interval '10 minutes') >= 50 then
     raise exception '지금은 제보가 많이 밀려 있어요. 잠시 뒤에 다시 해 주세요.' using errcode = 'P0001';
   end if;
-  insert into public.submissions (user_id, nickname, kind, place_id, name, category, location, body, map_url, lat, lng, photos)
+  insert into public.submissions (user_id, nickname, kind, place_id, name, category, location, body, map_url, lat, lng, photos, changes)
   values (
     me.id,
     me.nickname,
@@ -463,11 +517,28 @@ begin
     nullif(p ->> 'map_url', ''),
     (p ->> 'lat')::double precision,
     (p ->> 'lng')::double precision,
-    photos
+    photos,
+    -- 거르는 일은 submissions_clean 트리거가 한다.
+    p -> 'changes'
   )
   returning id into new_id;
   return new_id;
 end;
+$$;
+
+-- 운영자가 승인한 정보 수정 (누구나 읽기). 제보한 사람과 내용 글은 빼고 장소·바뀐 값·승인 시각만 돌려준다.
+create or replace function public.place_overrides()
+returns table (place_id text, changes jsonb, reviewed_at timestamptz)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select s.place_id, s.changes, s.reviewed_at
+  from public.submissions s
+  where s.kind = 'fix' and s.status = 'approved' and s.changes is not null and s.place_id is not null
+  order by s.reviewed_at asc nulls first
+  limit 2000;
 $$;
 
 -- ============================================================
@@ -487,7 +558,197 @@ create policy "제보 사진 운영자 지우기" on storage.objects
   for delete to authenticated using (bucket_id = 'place-photos' and public.is_admin());
 
 -- ============================================================
--- 8. 함수 실행 권한 (기본값인 public 실행 권한을 거두고 필요한 역할에만 준다)
+-- 8. '아직 맞아요' 확인 (회원마다 장소당 한 행, 다시 누르면 시각만 바뀐다)
+-- ============================================================
+create table if not exists public.place_confirms (
+  user_id uuid not null references public.profiles (id) on delete cascade,
+  place_id text not null check (place_id ~ '^[pq][0-9a-f]{8}$'),
+  confirmed_at timestamptz not null default now(),
+  primary key (user_id, place_id)
+);
+create index if not exists place_confirms_place_idx on public.place_confirms (place_id, confirmed_at desc);
+alter table public.place_confirms enable row level security;
+revoke all on public.place_confirms from anon, authenticated;
+
+create or replace function public.place_confirm(p_place text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  me public.profiles := public.writer();
+begin
+  if p_place is null or p_place !~ '^[pq][0-9a-f]{8}$' then
+    raise exception '장소가 올바르지 않아요.' using errcode = 'P0001';
+  end if;
+  if (select count(*) from public.place_confirms where user_id = me.id and confirmed_at > now() - interval '10 minutes') >= 30 then
+    raise exception '너무 자주 누르고 있어요. 잠시 뒤에 다시 해 주세요.' using errcode = 'P0001';
+  end if;
+  insert into public.place_confirms (user_id, place_id) values (me.id, p_place)
+  on conflict (user_id, place_id) do update set confirmed_at = now();
+end;
+$$;
+
+-- 최근 1년 동안 확인한 사람 수와 마지막 확인 시각 (누구나 읽기, 누가 눌렀는지는 돌려주지 않는다)
+create or replace function public.confirm_stats()
+returns table (place_id text, n int, last_at timestamptz)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select c.place_id, count(*)::int, max(c.confirmed_at)
+  from public.place_confirms c
+  where c.confirmed_at > now() - interval '365 days'
+  group by c.place_id;
+$$;
+
+-- ============================================================
+-- 9. 조회수 (관리자 통계용). 장소·날짜별 숫자만 남기고 누가 봤는지는 남기지 않는다.
+--    로그인 없이 부를 수 있어 숫자를 부풀릴 수 있다. 참고용 통계로만 쓴다.
+-- ============================================================
+create table if not exists public.place_view_counts (
+  place_id text not null check (place_id ~ '^[pq][0-9a-f]{8}$'),
+  day date not null,
+  n int not null default 0,
+  primary key (place_id, day)
+);
+alter table public.place_view_counts enable row level security;
+revoke all on public.place_view_counts from anon, authenticated;
+
+create or replace function public.place_view(p_place text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if p_place is null or p_place !~ '^[pq][0-9a-f]{8}$' then
+    return;
+  end if;
+  insert into public.place_view_counts (place_id, day, n)
+  values (p_place, (now() at time zone 'Asia/Seoul')::date, 1)
+  on conflict (place_id, day) do update set n = public.place_view_counts.n + 1;
+end;
+$$;
+
+-- ============================================================
+-- 10. 학식 메뉴 · 버스 시간표 (운영자가 관리자 화면에서 입력, 누구나 읽기)
+-- ============================================================
+create or replace function public.touch_updated_at()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  new.updated_at := now();
+  return new;
+end;
+$$;
+revoke all on function public.touch_updated_at() from public, anon, authenticated;
+
+create table if not exists public.cafeteria_menus (
+  id uuid primary key default gen_random_uuid(),
+  served_on date not null,
+  cafeteria text not null check (char_length(btrim(cafeteria)) between 1 and 30),
+  meal text not null check (meal in ('breakfast', 'lunch', 'dinner')),
+  items text not null check (char_length(btrim(items)) between 1 and 500),
+  price text check (price is null or char_length(price) <= 40),
+  note text check (note is null or char_length(note) <= 200),
+  updated_at timestamptz not null default now(),
+  unique (served_on, cafeteria, meal)
+);
+create index if not exists cafeteria_menus_day_idx on public.cafeteria_menus (served_on);
+alter table public.cafeteria_menus enable row level security;
+revoke all on public.cafeteria_menus from anon, authenticated;
+grant select on public.cafeteria_menus to anon, authenticated;
+grant insert, update, delete on public.cafeteria_menus to authenticated;
+drop policy if exists "학식 읽기" on public.cafeteria_menus;
+create policy "학식 읽기" on public.cafeteria_menus for select to anon, authenticated using (true);
+drop policy if exists "운영자 학식 쓰기" on public.cafeteria_menus;
+create policy "운영자 학식 쓰기" on public.cafeteria_menus
+  for all to authenticated using (public.is_admin()) with check (public.is_admin());
+drop trigger if exists cafeteria_menus_touch on public.cafeteria_menus;
+create trigger cafeteria_menus_touch before update on public.cafeteria_menus
+  for each row execute function public.touch_updated_at();
+
+-- times: 'HH:MM' 목록 (정렬은 화면에서 한다)
+create table if not exists public.bus_times (
+  id uuid primary key default gen_random_uuid(),
+  line text not null check (char_length(btrim(line)) between 1 and 40),
+  stop text not null check (char_length(btrim(stop)) between 1 and 40),
+  direction text check (direction is null or char_length(direction) <= 40),
+  day_type text not null default 'weekday' check (day_type in ('weekday', 'weekend', 'everyday')),
+  times text[] not null check (
+    cardinality(times) between 1 and 200
+    and array_to_string(times, ',') ~ '^([01][0-9]|2[0-3]):[0-5][0-9](,([01][0-9]|2[0-3]):[0-5][0-9])*$'
+  ),
+  note text check (note is null or char_length(note) <= 200),
+  source text check (source is null or char_length(source) <= 200),
+  sort_order int not null default 0,
+  updated_at timestamptz not null default now()
+);
+alter table public.bus_times enable row level security;
+revoke all on public.bus_times from anon, authenticated;
+grant select on public.bus_times to anon, authenticated;
+grant insert, update, delete on public.bus_times to authenticated;
+drop policy if exists "버스 읽기" on public.bus_times;
+create policy "버스 읽기" on public.bus_times for select to anon, authenticated using (true);
+drop policy if exists "운영자 버스 쓰기" on public.bus_times;
+create policy "운영자 버스 쓰기" on public.bus_times
+  for all to authenticated using (public.is_admin()) with check (public.is_admin());
+drop trigger if exists bus_times_touch on public.bus_times;
+create trigger bus_times_touch before update on public.bus_times
+  for each row execute function public.touch_updated_at();
+
+-- ============================================================
+-- 11. 관리자 통계 (운영자만)
+-- ============================================================
+create or replace function public.admin_stats()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.is_admin() then
+    raise exception '운영자만 볼 수 있어요.' using errcode = 'P0001';
+  end if;
+  return jsonb_build_object(
+    'members', (select count(*) from public.profiles),
+    'members7', (select count(*) from public.profiles where created_at > now() - interval '7 days'),
+    'reviews', (select count(*) from public.reviews),
+    'reviewsHidden', (select count(*) from public.reviews where hidden),
+    'submissions', (
+      select coalesce(jsonb_object_agg(s.status, s.n), '{}'::jsonb)
+      from (select status, count(*) as n from public.submissions group by status) s
+    ),
+    'confirms30', (select count(*) from public.place_confirms where confirmed_at > now() - interval '30 days'),
+    'views30', (select coalesce(sum(n), 0) from public.place_view_counts where day > current_date - 30),
+    'topViews', (
+      select coalesce(jsonb_agg(jsonb_build_object('id', v.place_id, 'n', v.total) order by v.total desc), '[]'::jsonb)
+      from (
+        select place_id, sum(n)::int as total from public.place_view_counts
+        where day > current_date - 30 group by place_id order by total desc limit 10
+      ) v
+    ),
+    'topFavorites', (
+      select coalesce(jsonb_agg(jsonb_build_object('id', f.id, 'n', f.n) order by f.n desc), '[]'::jsonb)
+      from (
+        select fav.id, count(*)::int as n
+        from public.user_data u
+        cross join lateral jsonb_array_elements_text(u.data -> 'favorites') as fav(id)
+        group by fav.id order by n desc limit 10
+      ) f
+    )
+  );
+end;
+$$;
+
+-- ============================================================
+-- 12. 함수 실행 권한 (기본값인 public 실행 권한을 거두고 필요한 역할에만 준다)
 -- ============================================================
 revoke all on function public.profile_set_nickname(text) from public;
 revoke all on function public.delete_account() from public;
@@ -502,6 +763,17 @@ grant execute on function public.review_save(text, int, text) to authenticated;
 grant execute on function public.review_delete(text) to authenticated;
 grant execute on function public.review_report(uuid) to authenticated;
 grant execute on function public.submission_create(jsonb) to authenticated;
+
+revoke all on function public.place_overrides() from public;
+revoke all on function public.place_confirm(text) from public;
+revoke all on function public.confirm_stats() from public;
+revoke all on function public.place_view(text) from public;
+revoke all on function public.admin_stats() from public;
+grant execute on function public.place_overrides() to anon, authenticated;
+grant execute on function public.place_confirm(text) to authenticated;
+grant execute on function public.confirm_stats() to anon, authenticated;
+grant execute on function public.place_view(text) to anon, authenticated;
+grant execute on function public.admin_stats() to authenticated;
 
 -- ============================================================
 -- 운영자 등록 (이 파일에 이메일을 쓰지 말고, SQL Editor 에서 따로 한 번 실행한다)

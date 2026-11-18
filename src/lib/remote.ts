@@ -1,5 +1,9 @@
 // Supabase 테이블·함수 호출 모음. 권한 검사는 서버(RLS·함수)가 하고, 여기서는 형식만 맞춘다.
-import { blendRating, type RatingStats } from "./places";
+import type { PlaceChanges } from "../types";
+import type { DayType } from "./bus";
+import { kstDateString } from "./dates";
+import type { Override } from "./overrides";
+import { blendRating, type ConfirmStats, type RatingStats } from "./places";
 import { PHOTO_BUCKET, friendlyError, photoUrl, supabase } from "./supabase";
 import { sanitizeData, type UserData } from "./userData";
 
@@ -99,6 +103,8 @@ export interface Submission {
   photos: string[];
   status: SubmissionStatus;
   admin_note?: string | null;
+  // '정보가 달라요' 제보의 바뀐 값. 운영자가 승인하면 사이트에 바로 반영된다.
+  changes?: PlaceChanges | null;
   created_at: string;
   reviewed_at: string | null;
 }
@@ -114,6 +120,7 @@ export interface SubmissionInput {
   lat?: number;
   lng?: number;
   photos: string[];
+  changes?: PlaceChanges;
 }
 
 export async function uploadPhoto(userId: string, blob: Blob): Promise<string> {
@@ -145,7 +152,93 @@ export async function listMySubmissions(userId: string): Promise<Submission[]> {
 
 export { photoUrl };
 
+// 운영자가 승인한 '정보가 달라요' 제보의 바뀐 값 (누구나 읽기, 서버 함수가 장소 ID·값·승인 시각만 돌려준다)
+export async function getPlaceOverrides(): Promise<Override[]> {
+  return ((await run(db().rpc("place_overrides"))) as Override[] | null) ?? [];
+}
+
+// ---------- '아직 맞아요' 확인 ----------
+export const confirmPlace = (placeId: string) => run(db().rpc("place_confirm", { p_place: placeId }));
+
+export async function getConfirmStats(): Promise<ConfirmStats> {
+  const rows = ((await run(db().rpc("confirm_stats"))) as { place_id: string; n: number; last_at: string }[] | null) ?? [];
+  return new Map(rows.map((r) => [r.place_id, { count: r.n, last: kstDateString(new Date(r.last_at)) }]));
+}
+
+// ---------- 조회수 (관리자 통계용, 장소 상세를 열 때 한 번) ----------
+export const trackView = (placeId: string) => run(db().rpc("place_view", { p_place: placeId }));
+
+// ---------- 학식 ----------
+export type Meal = "breakfast" | "lunch" | "dinner";
+export const MEALS: Meal[] = ["breakfast", "lunch", "dinner"];
+
+export interface CafeteriaMenu {
+  id: string;
+  served_on: string;
+  cafeteria: string;
+  meal: Meal;
+  items: string;
+  price: string | null;
+  note: string | null;
+  updated_at?: string;
+}
+export type CafeteriaInput = Omit<CafeteriaMenu, "id" | "updated_at">;
+
+export async function listMenus(from: string, to: string): Promise<CafeteriaMenu[]> {
+  return (await run(
+    db().from("cafeteria_menus").select("id, served_on, cafeteria, meal, items, price, note, updated_at").gte("served_on", from).lte("served_on", to).order("served_on").order("cafeteria").limit(500),
+  )) as CafeteriaMenu[];
+}
+
+// ---------- 버스 시간표 ----------
+export interface BusTime {
+  id: string;
+  line: string;
+  stop: string;
+  direction: string | null;
+  day_type: DayType;
+  times: string[];
+  note: string | null;
+  source: string | null;
+  sort_order: number;
+  updated_at?: string;
+}
+export type BusInput = Omit<BusTime, "id" | "updated_at">;
+
+export async function listBusTimes(): Promise<BusTime[]> {
+  return (await run(
+    db().from("bus_times").select("id, line, stop, direction, day_type, times, note, source, sort_order, updated_at").order("sort_order").order("line").limit(300),
+  )) as BusTime[];
+}
+
 // ---------- 운영자 ----------
+export async function adminSaveMenu(input: CafeteriaInput, id?: string) {
+  if (id) await run(db().from("cafeteria_menus").update(input).eq("id", id));
+  else await run(db().from("cafeteria_menus").insert(input));
+}
+export const adminDeleteMenu = (id: string) => run(db().from("cafeteria_menus").delete().eq("id", id));
+
+export async function adminSaveBus(input: BusInput, id?: string) {
+  if (id) await run(db().from("bus_times").update(input).eq("id", id));
+  else await run(db().from("bus_times").insert(input));
+}
+export const adminDeleteBus = (id: string) => run(db().from("bus_times").delete().eq("id", id));
+
+export interface AdminStats {
+  members: number;
+  members7: number;
+  reviews: number;
+  reviewsHidden: number;
+  submissions: Partial<Record<SubmissionStatus, number>>;
+  confirms30: number;
+  views30: number;
+  topViews: { id: string; n: number }[];
+  topFavorites: { id: string; n: number }[];
+}
+
+export async function adminStats(): Promise<AdminStats> {
+  return (await run(db().rpc("admin_stats"))) as AdminStats;
+}
 export async function adminListSubmissions(status: SubmissionStatus): Promise<Submission[]> {
   return (await run(db().from("submissions").select("*").eq("status", status).order("created_at", { ascending: false }).limit(300))) as Submission[];
 }

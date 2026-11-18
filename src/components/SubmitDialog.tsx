@@ -2,10 +2,12 @@
 import { ImagePlus, LocateFixed, X } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useLang } from "../lib/i18n";
+import { CHANGE_FIELDS, MAX_CHANGE_LENGTH, cleanChanges, type ChangeField } from "../lib/overrides";
 import { CONTACT, shrinkPhoto } from "../lib/photo";
 import { isNaverMapUrl } from "../lib/places";
 import { createSubmission, uploadPhoto, type SubmissionKind } from "../lib/remote";
 import { useSession } from "../lib/session";
+import type { PlaceChanges } from "../types";
 import { Modal } from "./Modal";
 
 export interface SubmitTarget {
@@ -13,6 +15,8 @@ export interface SubmitTarget {
   placeId?: string;
   name?: string;
   category?: string;
+  // 정보 수정 제보: 지금 사이트에 보이는 값 (입력 칸 아래에 보여준다)
+  current?: PlaceChanges;
 }
 
 const CATEGORIES = ["식당", "카페", "학교시설", "숨은장소", "생활꿀팁", "관광지", "자유"];
@@ -37,12 +41,15 @@ export function SubmitDialog({ target, onClose }: { target: SubmitTarget; onClos
   const [mapUrl, setMapUrl] = useState("");
   const [coord, setCoord] = useState<{ lat: number; lng: number } | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [changes, setChanges] = useState<Record<ChangeField, string>>({ hours: "", closedDays: "", price: "", menu: "", location: "" });
+  const [closed, setClosed] = useState(false);
   const [honeypot, setHoneypot] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const minBody = fix ? 10 : 20;
+  const changeLabels: Record<ChangeField, string> = { hours: t.hours, closedDays: t.closedDays, price: t.price, menu: t.menu, location: t.location };
 
   useEffect(() => () => photos.forEach((p) => URL.revokeObjectURL(p.url)), [photos]);
 
@@ -79,7 +86,7 @@ export function SubmitDialog({ target, onClose }: { target: SubmitTarget; onClos
       setDone(true);
       return;
     }
-    if ([name, location, body].some((v) => CONTACT.test(v))) {
+    if ([name, location, body, ...Object.values(changes)].some((v) => CONTACT.test(v))) {
       setError(t.submitContact);
       return;
     }
@@ -108,6 +115,8 @@ export function SubmitDialog({ target, onClose }: { target: SubmitTarget; onClos
         lat: coord?.lat,
         lng: coord?.lng,
         photos: paths,
+        // 폐업이면 다른 칸(비활성화됨)은 보내지 않는다.
+        changes: fix ? (cleanChanges(closed ? { closed } : changes) ?? undefined) : undefined,
       });
       localStorage.setItem(COOLDOWN_KEY, String(Date.now()));
       setDone(true);
@@ -166,6 +175,37 @@ export function SubmitDialog({ target, onClose }: { target: SubmitTarget; onClos
                   <input id="submit-location" value={location} onChange={(e) => setLocation(e.target.value)} maxLength={120} />
                 </div>
               </>
+            )}
+            {fix && (
+              <fieldset className="changeFields">
+                <legend>{t.submitChanges}</legend>
+                <p className="hint">{t.submitChangesHint}</p>
+                {CHANGE_FIELDS.map((key) => {
+                  const now = target.current?.[key];
+                  return (
+                    <div key={key} className="field">
+                      <label htmlFor={`change-${key}`}>{changeLabels[key]}</label>
+                      <input
+                        id={`change-${key}`}
+                        value={changes[key]}
+                        onChange={(e) => setChanges((c) => ({ ...c, [key]: e.target.value }))}
+                        maxLength={MAX_CHANGE_LENGTH}
+                        disabled={closed}
+                        aria-describedby={now ? `change-${key}-now` : undefined}
+                      />
+                      {now && (
+                        <p className="hint" id={`change-${key}-now`} lang="ko">
+                          {t.submitCurrent(now)}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+                <label className="check">
+                  <input type="checkbox" checked={closed} onChange={(e) => setClosed(e.target.checked)} />
+                  {t.submitChangeClosed}
+                </label>
+              </fieldset>
             )}
             <div className="field">
               <label htmlFor="submit-body">{fix ? t.submitBodyFix : t.submitBody(minBody)}</label>

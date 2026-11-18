@@ -1,8 +1,8 @@
 import { ExternalLink, RotateCcw, Star, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { isLocated, pinIcon, type Located } from "../lib/naverMap";
+import { isLocated, pinImage, type Located } from "../lib/kakaoMap";
 import type { PlaceView } from "../lib/places";
-import { useNaverMap } from "../lib/useNaverMap";
+import { useKakaoMap } from "../lib/useKakaoMap";
 
 interface Props {
   places: PlaceView[];
@@ -23,7 +23,11 @@ interface PinGroup {
 }
 
 // 처음 보이는 위치: 학교와 대학로 일대
-const CAMPUS = { lat: 36.966, lng: 127.872, zoom: 15 };
+const CAMPUS = { lat: 36.966, lng: 127.872, level: 5 };
+// 장소 하나를 보여줄 때의 확대 단계, 여러 곳을 맞출 때 이보다 더 가까이 가지 않는다.
+const CLOSE_LEVEL = 3;
+// 이 단계보다 넓게 볼 때 가까운 핀을 숫자 원으로 묶는다.
+const CLUSTER_LEVEL = 6;
 
 function groupByCoordinate(places: PlaceView[]): PinGroup[] {
   const groups = new Map<string, PinGroup>();
@@ -38,7 +42,7 @@ function groupByCoordinate(places: PlaceView[]): PinGroup[] {
 
 export function PlaceMap({ places, favoriteIds, focusId = null, onOpen, onToggleFavorite, onShowList }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { maps, map, error, retry } = useNaverMap(containerRef, CAMPUS);
+  const { maps, map, error, retry } = useKakaoMap(containerRef, CAMPUS);
   const [activeKey, setActiveKey] = useState<string | null>(null);
 
   const groups = useMemo(() => groupByCoordinate(places), [places]);
@@ -59,31 +63,34 @@ export function PlaceMap({ places, favoriteIds, focusId = null, onOpen, onToggle
       const single = group.places.length === 1;
       const marker = new maps.Marker({
         position: new maps.LatLng(group.lat, group.lng),
-        map,
-        icon: pinIcon(maps, group.places[0].category, group.places.length),
+        image: pinImage(maps, group.places[0].category, group.places.length),
         title: single ? group.places[0].name : `${group.places[0].name} 외 ${group.places.length - 1}곳`,
-        zIndex: single ? 100 : 200,
+        zIndex: single ? 1 : 2,
       });
-      maps.Event.addListener(marker, "click", () => setActiveKey(group.key));
+      maps.event.addListener(marker, "click", () => setActiveKey(group.key));
       return marker;
     });
-    const mapClick = maps.Event.addListener(map, "click", () => setActiveKey(null));
+    // 멀리서 볼 때는 가까운 핀을 숫자 원으로 묶고, 원을 누르면 한 단계 가까이 간다.
+    const clusterer = new maps.MarkerClusterer({ map, averageCenter: true, minLevel: CLUSTER_LEVEL });
+    clusterer.addMarkers(markers);
+    const closePanel = () => setActiveKey(null);
+    maps.event.addListener(map, "click", closePanel);
 
+    map.relayout();
     if (current.length === 1) {
       map.setCenter(new maps.LatLng(current[0].lat, current[0].lng));
-      map.setZoom(17);
+      map.setLevel(CLOSE_LEVEL);
     } else if (current.length > 1) {
-      const lats = current.map((g) => g.lat);
-      const lngs = current.map((g) => g.lng);
-      const bounds = new maps.LatLngBounds(
-        new maps.LatLng(Math.min(...lats), Math.min(...lngs)),
-        new maps.LatLng(Math.max(...lats), Math.max(...lngs)),
-      );
-      map.fitBounds(bounds, { top: 48, right: 48, bottom: 48, left: 48, maxZoom: 17 });
+      const bounds = new maps.LatLngBounds();
+      current.forEach((g) => bounds.extend(new maps.LatLng(g.lat, g.lng)));
+      map.setBounds(bounds, 48, 48, 48, 48);
+      if (map.getLevel() < CLOSE_LEVEL) map.setLevel(CLOSE_LEVEL);
     }
 
     return () => {
-      maps.Event.removeListener(mapClick);
+      maps.event.removeListener(map, "click", closePanel);
+      clusterer.clear();
+      clusterer.setMap?.(null);
       markers.forEach((marker) => marker.setMap(null));
     };
   }, [maps, map, pinKey]);
@@ -92,8 +99,8 @@ export function PlaceMap({ places, favoriteIds, focusId = null, onOpen, onToggle
     if (!maps || !map || !focusId) return;
     const group = groupsRef.current.find((g) => g.places.some((p) => p.id === focusId));
     if (!group) return;
+    map.setLevel(CLOSE_LEVEL);
     map.setCenter(new maps.LatLng(group.lat, group.lng));
-    map.setZoom(17);
     setActiveKey(group.key);
   }, [maps, map, focusId]);
 
@@ -149,6 +156,7 @@ export function PlaceMap({ places, favoriteIds, focusId = null, onOpen, onToggle
                       {place.summary && <span className="pinSummary">{place.summary}</span>}
                     </button>
                     <span className="pinActions">
+                      {/* 원본 데이터의 지도 링크(네이버 지도 주소)가 있으면 그대로 연다 */}
                       {place.safeMapUrl && (
                         <a
                           className="iconButton"

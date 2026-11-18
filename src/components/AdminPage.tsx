@@ -19,24 +19,53 @@ import {
   type SubmissionStatus,
 } from "../lib/remote";
 import { useSession } from "../lib/session";
+import { CHANGE_FIELDS, MAX_CHANGE_LENGTH, cleanChanges, type ChangeField } from "../lib/overrides";
 import type { PlaceView } from "../lib/places";
+import { BusAdmin, MenuAdmin, StatsPanel } from "./AdminData";
 
-type Tab = SubmissionStatus | "reviews" | "members";
+type Tab = SubmissionStatus | "reviews" | "members" | "menus" | "buses" | "stats";
 const TABS: { id: Tab; label: string }[] = [
   { id: "pending", label: "대기" },
   { id: "approved", label: "승인됨" },
   { id: "rejected", label: "거절됨" },
   { id: "reviews", label: "후기" },
   { id: "members", label: "회원" },
+  { id: "menus", label: "학식" },
+  { id: "buses", label: "버스" },
+  { id: "stats", label: "통계" },
 ];
 const CATEGORIES = ["식당", "카페", "학교시설", "숨은장소", "생활꿀팁", "관광지", "자유"];
+const CHANGE_LABEL: Record<ChangeField, string> = { hours: "운영시간", closedDays: "휴무일", price: "가격", menu: "대표메뉴", location: "위치" };
 const messageOf = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
-function SubmissionCard({ item, placeName, onDone }: { item: Submission; placeName: string; onDone: (msg: string) => void }) {
+type ChangeForm = Record<ChangeField, string> & { closed: boolean };
+const toForm = (item: Submission): ChangeForm => ({
+  hours: item.changes?.hours ?? "",
+  closedDays: item.changes?.closedDays ?? "",
+  price: item.changes?.price ?? "",
+  menu: item.changes?.menu ?? "",
+  location: item.changes?.location ?? "",
+  closed: Boolean(item.changes?.closed),
+});
+
+function SubmissionCard({ item, place, onDone }: { item: Submission; place?: PlaceView; onDone: (msg: string) => void }) {
   const [edit, setEdit] = useState({ name: item.name, category: item.category, location: item.location ?? "", body: item.body });
+  const [fixForm, setFixForm] = useState<ChangeForm>(() => toForm(item));
   const [note, setNote] = useState(item.admin_note ?? "");
   const [busy, setBusy] = useState(false);
-  const changed = edit.name !== item.name || edit.category !== item.category || edit.location !== (item.location ?? "") || edit.body !== item.body;
+  const fix = item.kind === "fix";
+  const changes = fix ? cleanChanges(fixForm) : null;
+  const changesEdited = fix && JSON.stringify(changes) !== JSON.stringify(cleanChanges(item.changes ?? null));
+  const changed = edit.name !== item.name || edit.category !== item.category || edit.location !== (item.location ?? "") || edit.body !== item.body || changesEdited;
+  const placeName = item.place_id ? (place?.name ?? item.place_id) : "";
+  // 장소의 지금 값 (원본 또는 이미 반영된 다른 제보)
+  const current: Record<ChangeField, string> = {
+    hours: place?.hours ?? "",
+    closedDays: place?.closedDays ?? "",
+    price: place?.price ?? "",
+    menu: place?.menu ?? "",
+    location: place?.location ?? "",
+  };
 
   const act = async (fn: () => Promise<unknown>, msg: string) => {
     setBusy(true);
@@ -49,7 +78,14 @@ function SubmissionCard({ item, placeName, onDone }: { item: Submission; placeNa
       setBusy(false);
     }
   };
-  const patch = { name: edit.name.trim(), category: edit.category, location: edit.location.trim() || null, body: edit.body.trim(), admin_note: note.trim() || null };
+  const patch: Partial<Submission> = {
+    name: edit.name.trim(),
+    category: edit.category,
+    location: edit.location.trim() || null,
+    body: edit.body.trim(),
+    admin_note: note.trim() || null,
+    ...(fix ? { changes } : {}),
+  };
 
   return (
     <li className="adminItem glass">
@@ -96,6 +132,26 @@ function SubmissionCard({ item, placeName, onDone }: { item: Submission; placeNa
         <label htmlFor={`b-${item.id}`}>내용</label>
         <textarea id={`b-${item.id}`} value={edit.body} onChange={(e) => setEdit({ ...edit, body: e.target.value })} maxLength={500} rows={4} />
       </div>
+      {fix && (
+        <fieldset className="changeFields">
+          <legend>사이트에 반영할 값 (승인하면 바로 바뀝니다. 비운 칸은 그대로 둡니다)</legend>
+          <div className="adminGrid">
+            {CHANGE_FIELDS.map((key) => (
+              <div key={key} className="field">
+                <label htmlFor={`x-${key}-${item.id}`}>{CHANGE_LABEL[key]}</label>
+                <input id={`x-${key}-${item.id}`} value={fixForm[key]} onChange={(e) => setFixForm({ ...fixForm, [key]: e.target.value })} maxLength={MAX_CHANGE_LENGTH} />
+                {current[key] && <p className="hint">지금: {current[key]}</p>}
+              </div>
+            ))}
+          </div>
+          <label className="check">
+            <input type="checkbox" checked={fixForm.closed} onChange={(e) => setFixForm({ ...fixForm, closed: e.target.checked })} />
+            폐업·없어짐으로 표시 (목록과 지도에서 빠집니다)
+          </label>
+          {!changes && <p className="hint">반영할 값이 없으면 승인해도 화면은 바뀌지 않습니다. (원본 XLSX 를 직접 고쳐 반영)</p>}
+          {changes?.location && <p className="hint">위치를 바꿔도 지도 좌표는 그대로입니다. 가게가 옮겨 갔다면 data/place-coordinates.json 도 고치세요.</p>}
+        </fieldset>
+      )}
       {(item.map_url || item.lat) && (
         <p className="meta">
           {item.map_url && (
@@ -150,7 +206,9 @@ function SubmissionCard({ item, placeName, onDone }: { item: Submission; placeNa
   );
 }
 
-export default function AdminPage({ places }: { places: PlaceView[] }) {
+// onDataChanged: 학식·버스를 고치면 첫 화면의 바로 가기도 새로 불러온다.
+// onPlacesChanged: 정보 수정 제보를 승인·내리면 장소 목록에 다시 반영한다.
+export default function AdminPage({ places, onDataChanged, onPlacesChanged }: { places: PlaceView[]; onDataChanged: () => void; onPlacesChanged: () => void }) {
   const s = useSession();
   const [tab, setTab] = useState<Tab>("pending");
   const [items, setItems] = useState<Submission[]>([]);
@@ -159,8 +217,11 @@ export default function AdminPage({ places }: { places: PlaceView[] }) {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const names = new Map(places.map((p) => [p.id, p.name]));
+  const byId = new Map(places.map((p) => [p.id, p]));
+  const isSubmissionTab = tab === "pending" || tab === "approved" || tab === "rejected";
 
   const load = useCallback(async () => {
+    if (tab === "menus" || tab === "buses" || tab === "stats") return;
     setLoading(true);
     try {
       if (tab === "reviews") setReviews(await adminListReviews());
@@ -200,6 +261,7 @@ export default function AdminPage({ places }: { places: PlaceView[] }) {
   const done = (msg: string) => {
     setMessage(msg);
     void load();
+    if (isSubmissionTab) onPlacesChanged();
   };
 
   return (
@@ -221,14 +283,18 @@ export default function AdminPage({ places }: { places: PlaceView[] }) {
       )}
       {loading && <p className="hint">불러오는 중…</p>}
 
-      {tab !== "reviews" && tab !== "members" && (
+      {isSubmissionTab && (
         <ul className="adminList">
           {!loading && items.length === 0 && <li className="hint">항목이 없습니다.</li>}
           {items.map((item) => (
-            <SubmissionCard key={`${item.id}-${item.status}`} item={item} placeName={item.place_id ? (names.get(item.place_id) ?? item.place_id) : ""} onDone={done} />
+            <SubmissionCard key={`${item.id}-${item.status}`} item={item} place={item.place_id ? byId.get(item.place_id) : undefined} onDone={done} />
           ))}
         </ul>
       )}
+
+      {tab === "menus" && <MenuAdmin onChanged={onDataChanged} />}
+      {tab === "buses" && <BusAdmin onChanged={onDataChanged} />}
+      {tab === "stats" && <StatsPanel places={places} />}
 
       {tab === "reviews" && (
         <ul className="adminList">

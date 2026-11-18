@@ -129,3 +129,8 @@ export function campusXYFromLatLng(lat: number, lng: number, size = { w: 1468, h
   if (x < 0 || y < 0 || x > size.w || y > size.h) return null;
   return { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 };
 }
+
+// 캠퍼스 지도 좌표 → 위도·경도 (위 식의 역). 주소 좌표가 없는 교내 장소의 거리를 잴 때 쓴다.
+export function latLngFromCampusXY(x: number, y: number) {
+  return { lat: BOUNDS.maxLat - y / MY, lng: BOUNDS.minLng + x / MX };
+}

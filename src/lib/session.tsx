@@ -64,6 +64,8 @@ interface SessionValue {
 
   toggleFavorite: (placeId: string) => void;
   createCollection: (name: string, placeId?: string) => string | null;
+  // 공유받은 목록을 통째로 저장한다. 같은 이름의 목록이 있으면 장소만 합친다.
+  saveCollection: (name: string, placeIds: string[]) => string | null;
   renameCollection: (id: string, name: string) => void;
   deleteCollection: (id: string) => void;
   toggleInCollection: (collectionId: string, placeId: string) => void;
@@ -328,6 +330,22 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         }
         const id = newCollectionId();
         commit((d) => ({ ...d, collections: [...d.collections, { id, name: clean, placeIds: placeId ? [placeId] : [] }] }));
+        return id;
+      },
+      saveCollection: (name, placeIds) => {
+        const clean = name.trim().slice(0, MAX_COLLECTION_NAME);
+        if (!user || !clean) return null;
+        const existing = data.collections.find((c) => c.name === clean);
+        if (existing) {
+          commit((d) => ({
+            ...d,
+            collections: d.collections.map((c) => (c.id === existing.id ? { ...c, placeIds: [...new Set([...c.placeIds, ...placeIds])] } : c)),
+          }));
+          return existing.id;
+        }
+        if (data.collections.length >= MAX_COLLECTIONS) return null;
+        const id = newCollectionId();
+        commit((d) => ({ ...d, collections: [...d.collections, { id, name: clean, placeIds: [...new Set(placeIds)] }] }));
         return id;
       },
       renameCollection: (id, name) => {

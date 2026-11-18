@@ -80,15 +80,32 @@ export const FAKE_KAKAO_MAPS = `(() => {
 })();`;
 export const KAKAO_SDK_URL = /^https:\/\/dapi\.kakao\.com\//;
 
+// 소주제 사전(data/topics.json)을 못 받으면 앱은 예전 첫 화면(전체 카드 목록, 옆 패널 검색·필터)을 쓴다.
+// 카드 목록·필터·정렬을 검사하는 테스트는 사전을 막고 이 화면에서 돌린다.
+// 검색 중심 첫 화면(SearchHero)은 home.test.mjs 에서 사전을 켠 채(topics: true) 따로 검사한다.
+export const TOPICS_URL = /\/data\/topics\.json$/;
+export const blockTopics = (context) => context.route(TOPICS_URL, (route) => route.fulfill({ status: 404, body: "" }));
+
 // 새 브라우저 컨텍스트에서 테스트 본문을 실행하고, 끝나면 콘솔 오류가 없었는지 확인한다.
 export async function withPage(browser, fn, options = {}) {
   // ready: 첫 화면이 준비됐다고 볼 요소 (캠퍼스 지도처럼 카드가 없는 화면으로 바로 열 때 바꾼다)
-  const { viewport = { width: 1440, height: 900 }, url = "", serviceWorkers = "block", checkErrors = true, clock, ready = "article.card", ...rest } = options;
+  const {
+    viewport = { width: 1440, height: 900 },
+    url = "",
+    serviceWorkers = "block",
+    checkErrors = true,
+    clock,
+    topics = false,
+    ready = topics ? ".searchHero" : "article.card",
+    ...rest
+  } = options;
   const context = await browser.newContext({ viewport, locale: "ko-KR", serviceWorkers, permissions: ["clipboard-read", "clipboard-write"], ...rest });
   await context.route(KAKAO_SDK_URL, (route) => route.fulfill({ contentType: "text/javascript", body: FAKE_KAKAO_MAPS }));
+  if (!topics) await blockTopics(context);
   const page = await context.newPage();
   const errors = [];
-  page.on("console", (message) => message.type() === "error" && errors.push(message.text()));
+  // 콘솔 오류에는 어느 주소에서 났는지 붙인다 (일부러 막은 사전 요청을 걸러 내기 위해).
+  page.on("console", (message) => message.type() === "error" && errors.push(`${message.text()} @ ${message.location()?.url ?? ""}`));
   page.on("pageerror", (error) => errors.push(String(error)));
   page.on("response", (response) => response.status() >= 400 && errors.push(`${response.status()} ${response.url()}`));
   try {
@@ -98,7 +115,7 @@ export async function withPage(browser, fn, options = {}) {
     await page.waitForSelector(ready);
     await fn(page, context);
     if (checkErrors) {
-      const real = errors.filter((e) => !/favicon/.test(e));
+      const real = errors.filter((e) => !/favicon/.test(e) && (topics || !/topics\.json/.test(e)));
       if (real.length) throw new Error(`콘솔·네트워크 오류: ${real.slice(0, 3).join(" | ")}`);
     }
   } finally {

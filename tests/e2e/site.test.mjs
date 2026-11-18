@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
-import { BASE, cards, chip, launchBrowser, places, resultCount, settle, startServer, withPage } from "./helpers.mjs";
+import { BASE, blockTopics, cards, chip, launchBrowser, places, resultCount, settle, startServer, withPage } from "./helpers.mjs";
 
 let server;
 let browser;
@@ -313,6 +313,7 @@ describe("사진", () => {
 describe("오류 상태", () => {
   test("데이터를 불러오지 못하면 안내하고, 다시 시도하면 복구된다", async () => {
     const context = await browser.newContext({ serviceWorkers: "block", locale: "ko-KR" });
+    await blockTopics(context);
     const page = await context.newPage();
     let fail = true;
     await page.route("**/data/places.json", (route) => (fail ? route.abort() : route.continue()));
@@ -328,6 +329,7 @@ describe("오류 상태", () => {
 
   test("이미지 요청이 실패하면 카드는 이미지 없이, 상세는 대체 표시로 보인다", async () => {
     const context = await browser.newContext({ serviceWorkers: "block", locale: "ko-KR" });
+    await blockTopics(context);
     const page = await context.newPage();
     await page.route("**/images/places/*.webp", (route) => route.abort());
     await page.goto(BASE);

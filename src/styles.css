@@ -1,7 +1,11 @@
-/* 디자인: 교통여지도(팀원) '삿포로' 테마 — 얼음빛 하늘 바탕 + 가로등 구리색 강조 하나, 반투명 유리 면.
+/* 디자인: 교통여지도·48시간 소개팅의 '삿포로' 테마 — 얼음빛 하늘 바탕 + 같은 하늘색 계열의 짙은 강조 하나, 반투명 유리 면.
+   번짐은 48시간 소개팅 삿포로(파트 A+B)의 얼음빛(#f4f8fb)과 가로등빛(#f2d6b3). 글꼴은 Pretendard.
    토큰 이름(--bg, --surface, --accent, --cat-*)은 기존 컴포넌트와 공유한다. 어두운 화면은 같은 구성의 밤 하늘 팔레트. */
 :root {
   color-scheme: light;
+  --glow-1: rgb(255 255 255 / 0.7);
+  --glow-2: rgb(242 214 179 / 0.45);
+  --icon: #0c1a24;
   --bg: #d3e5ef;
   --bg-2: #e9f2f7;
   --surface: #ffffff;
@@ -12,10 +16,11 @@
   --line-soft: #dbe7ee;
   --hover: #e6eff5;
   --placeholder: #e4ecf1;
-  --accent: #9a4c0c;
-  --accent-strong: #7f3e08;
-  --accent-soft: #f6e7da;
-  --accent-glow: rgb(154 76 12 / 0.3);
+  /* 강조색: 바탕과 같은 색상(201°)의 짙은 하늘색. 흰 글자 6.36:1, 바탕 위 글자 4.91:1 */
+  --accent: #2b6585;
+  --accent-strong: #1f4f6b;
+  --accent-soft: #e1edf4;
+  --accent-glow: rgb(43 101 133 / 0.28);
   --on-accent: #ffffff;
   --star: #8f4a00;
   --warn-bg: #fbf1d9;
@@ -30,6 +35,12 @@
   --glass-a: rgb(255 255 255 / 0.66);
   --glass-b: rgb(255 255 255 / 0.52);
   --glass-c: rgb(255 255 255 / 0.6);
+  /* 유리 바깥 머리카락 선과 테두리 빛 (Liquid Glass Lab 아티팩트 방식) */
+  --glass-line: rgb(12 26 36 / 0.06);
+  --rim-base: rgb(255 255 255 / 0.75);
+  /* 검색창 뒤에만 모으는 번짐: 얼음빛 + 가로등빛 */
+  --glow-focus-1: rgb(244 248 251 / 0.95);
+  --glow-focus-2: rgb(242 214 179 / 0.6);
   --glass-edge: rgb(255 255 255 / 0.8);
   --glass-glow: rgb(255 255 255 / 0.85);
   --glass-blur: blur(18px) saturate(1.6);
@@ -79,11 +90,11 @@
     --line-soft: #213646;
     --hover: #1f3442;
     --placeholder: #1a2d3b;
-    --accent: #f0a868;
-    --accent-strong: #ffc898;
-    --accent-soft: #3a2614;
-    --accent-glow: rgb(240 168 104 / 0.28);
-    --on-accent: #1b0e03;
+    --accent: #8cc4e3;
+    --accent-strong: #b4dbf0;
+    --accent-soft: #16303f;
+    --accent-glow: rgb(140 196 227 / 0.25);
+    --on-accent: #0b1a24;
     --star: #f3b45c;
     --warn-bg: #3b3220;
     --warn-fg: #f2d594;
@@ -101,6 +112,13 @@
     --glass-glow: rgb(255 255 255 / 0.08);
     --sheen: 0.12;
     --blob: rgb(64 110 140 / 0.35);
+  --glow-1: rgb(64 110 140 / 0.35);
+  --glow-2: rgb(240 168 104 / 0.1);
+  --icon: #e8f0f5;
+  --glass-line: rgb(255 255 255 / 0.08);
+  --rim-base: rgb(255 255 255 / 0.16);
+  --glow-focus-1: rgb(64 110 140 / 0.45);
+  --glow-focus-2: rgb(240 168 104 / 0.14);
   }
   :root:not([data-theme="light"]) [data-category="식당"] { --cat-bg: #4a2a14; --cat-fg: #ffc79a; }
   :root:not([data-theme="light"]) [data-category="카페"] { --cat-bg: #4d1f31; --cat-fg: #ffb3c9; }
@@ -125,11 +143,11 @@
   --line-soft: #213646;
   --hover: #1f3442;
   --placeholder: #1a2d3b;
-  --accent: #f0a868;
-  --accent-strong: #ffc898;
-  --accent-soft: #3a2614;
-  --accent-glow: rgb(240 168 104 / 0.28);
-  --on-accent: #1b0e03;
+  --accent: #8cc4e3;
+  --accent-strong: #b4dbf0;
+  --accent-soft: #16303f;
+  --accent-glow: rgb(140 196 227 / 0.25);
+  --on-accent: #0b1a24;
   --star: #f3b45c;
   --warn-bg: #3b3220;
   --warn-fg: #f2d594;
@@ -147,6 +165,13 @@
   --glass-glow: rgb(255 255 255 / 0.08);
   --sheen: 0.12;
   --blob: rgb(64 110 140 / 0.35);
+  --glow-1: rgb(64 110 140 / 0.35);
+  --glow-2: rgb(240 168 104 / 0.1);
+  --icon: #e8f0f5;
+  --glass-line: rgb(255 255 255 / 0.08);
+  --rim-base: rgb(255 255 255 / 0.16);
+  --glow-focus-1: rgb(64 110 140 / 0.45);
+  --glow-focus-2: rgb(240 168 104 / 0.14);
 }
 :root[data-theme="dark"] [data-category="식당"] { --cat-bg: #4a2a14; --cat-fg: #ffc79a; }
 :root[data-theme="dark"] [data-category="카페"] { --cat-bg: #4d1f31; --cat-fg: #ffb3c9; }
@@ -204,9 +229,12 @@ a { color: var(--accent-strong); }
 
 /* 배경: 천천히 움직이는 흰 빛 두 개 */
 .sky { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: linear-gradient(180deg, var(--bg-2), var(--bg) 60%); }
-.sky span { position: absolute; width: 78vmax; height: 78vmax; border-radius: 50%; background: radial-gradient(closest-side, var(--blob), transparent); }
-.sky span:first-child { left: -30vmax; top: -30vmax; }
-.sky span:last-child { right: -34vmax; bottom: -40vmax; }
+/* 번짐 두 개: 버건디(묽게)와 그레이. 검색 첫 화면에서는 검색창 뒤 가운데로 모인다. */
+.sky span { position: absolute; width: 78vmax; height: 78vmax; border-radius: 50%; }
+.sky span:first-child { left: -30vmax; top: -30vmax; background: radial-gradient(closest-side, var(--glow-1), transparent); }
+.sky span:last-child { right: -34vmax; bottom: -40vmax; background: radial-gradient(closest-side, var(--glow-2), transparent); }
+.app[data-home="search"] .sky span:first-child { left: calc(50% - 52vmax); top: calc(42% - 39vmax); }
+.app[data-home="search"] .sky span:last-child { right: calc(50% - 60vmax); bottom: calc(52% - 46vmax); }
 
 /* ---------- 유리 ---------- */
 /* 반사광은 배경 맨 위 층으로 그려 내용(텍스트) 아래에 깔린다. --mx, --my 는 useGlassSheen 이 마우스 위치로 바꾼다. */
@@ -216,12 +244,18 @@ a { color: var(--accent-strong); }
     linear-gradient(160deg, var(--glass-a), var(--glass-b) 45%, var(--glass-c));
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
+  /* 반사 층을 겹친다 (사용자의 Liquid Glass Lab 아티팩트 방식): 윗면 빛, 아랫면, 좌우 옆빛, 안쪽 윗빛, 바닥 반사광,
+     흰 바탕용 바깥 머리카락 선, 그리고 그림자 */
   box-shadow:
     inset 0 1px 0 var(--glass-edge),
     inset 0 -1px 0 rgb(255 255 255 / 0.18),
+    inset 1px 0 0 rgb(255 255 255 / 0.3),
+    inset -1px 0 0 rgb(255 255 255 / 0.14),
     inset 0 14px 22px -16px var(--glass-glow),
+    inset 0 -18px 26px -20px rgb(255 255 255 / 0.4),
+    0 0 0 1px var(--glass-line),
     0 1px 2px var(--shadow),
-    0 22px 48px -26px var(--shadow);
+    0 26px 56px -26px var(--shadow);
   --mx: 30%;
   --my: 0%;
 }
@@ -406,7 +440,7 @@ select {
   border: 0;
   border-radius: 50%;
   background: transparent;
-  color: var(--muted);
+  color: var(--icon);
   text-decoration: none;
 }
 .iconButton:hover { background: var(--hover); color: var(--text); }
@@ -555,7 +589,7 @@ select {
   gap: 2px;
   border: 0;
   background: none;
-  color: var(--muted);
+  color: var(--icon);
   font-size: 0.74rem;
   font-weight: 600;
 }
@@ -1079,6 +1113,117 @@ select {
     .dialog.placeDialog[open] .sheet { animation: none; }
   }
 }
+/* ---------- 검색 중심 첫 화면 ---------- */
+/* 첫 화면·둘러보기에서는 옆 패널의 검색창과 필터를 숨긴다 (검색창은 가운데 하나만). */
+.app[data-home] .side > .search,
+.app[data-home] .side > .controls { display: none; }
+
+.searchHero { position: relative; isolation: isolate; display: grid; justify-items: center; gap: 18px; padding: clamp(32px, 14vh, 140px) 0 8px; min-width: 0; }
+/* 검색창 바로 뒤에 모으는 번짐 (버건디 + 그레이). 유리가 비쳐 보일 색을 만든다. 화면 밖으로 넘치지 않게 결과 영역 폭 안에서만 그린다. */
+.searchHero::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 0;
+  right: 0;
+  top: calc(clamp(32px, 14vh, 140px) + 90px);
+  height: 520px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  background:
+    radial-gradient(42% 46% at 44% 50%, var(--glow-focus-1), transparent 72%),
+    radial-gradient(38% 40% at 62% 58%, var(--glow-focus-2), transparent 72%);
+}
+.searchHero.searching::before { top: 40px; height: 260px; opacity: 0.6; }
+
+/* 테두리 빛 (사용자의 Liquid Glass Lab 아티팩트의 ::after 마스크 방식). 포인터 쪽은 흰빛, 나머지는 KNUT Gray 로 흰 바탕에서도 가장자리가 보인다.
+   아티팩트처럼 자식 요소를 모두 relative 로 바꾸지 않는다 (검색 아이콘·지우기 버튼이 absolute 라서). */
+.liquid { position: relative; }
+.liquid::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1.5px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(55% 55% at var(--mx, 30%) var(--my, 0%), rgb(255 255 255 / 0.95), var(--rim-base) 62%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+.searchHero.searching { justify-items: stretch; padding-top: 8px; gap: 14px; }
+.heroTitle { font-size: clamp(1.6rem, 5vw, 2.4rem); font-weight: 500; letter-spacing: -0.02em; text-align: center; }
+.searchHero.searching .heroTitle { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.heroSearch { position: relative; width: min(100%, 680px); justify-self: center; border-radius: var(--r-pill); }
+.heroSearch input { width: 100%; height: 60px; padding: 0 52px; border: 0; border-radius: var(--r-pill); background: transparent; font-size: 1.05rem; outline: none; }
+.heroSearch input::placeholder { color: var(--muted); }
+.heroSearch input::-webkit-search-cancel-button { display: none; }
+.heroSearch:focus-within { box-shadow: inset 0 0 0 2px var(--accent), 0 10px 30px -14px var(--shadow); }
+.heroSearch .searchIcon { left: 20px; top: 20px; color: var(--icon); }
+.heroSearch .clear { right: 8px; top: 8px; width: 44px; height: 44px; border-radius: 50%; color: var(--icon); }
+
+/* 추천 주제 칩: 4개 묶음이 아래에서 올라오고, 바뀔 때 위로 사라진다 */
+.heroChips { display: flex; align-items: center; justify-content: center; gap: 6px; width: min(100%, 680px); min-height: 92px; }
+.chipPage { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.topicChip { gap: 6px; color: var(--text); }
+.chipPause { width: 36px; height: 36px; flex: none; }
+.chipRow.center { justify-content: center; }
+
+.entries { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: min(100%, 420px); }
+.entry { display: grid; justify-items: center; gap: 6px; padding: 14px 8px; border: 0; border-radius: var(--r-lg); color: var(--icon); font-weight: 700; }
+.entry:hover { box-shadow: inset 0 0 0 1.5px var(--accent), 0 10px 24px -18px var(--shadow); }
+
+/* 검색 결과 · 둘러보기 */
+.results, .browse { display: grid; gap: 16px; width: min(100%, 760px); justify-self: center; min-width: 0; }
+.resultCount { color: var(--muted); font-size: 0.88rem; }
+.resultGroup { display: grid; gap: 8px; min-width: 0; }
+.groupTitle { display: flex; align-items: center; gap: 6px; font-size: 1rem; font-weight: 700; }
+.groupTitle .count { color: var(--muted); font-weight: 600; font-size: 0.86rem; }
+.browseGroup { display: grid; gap: 14px; }
+.browseGroupTitle { font-size: 1.25rem; font-weight: 700; margin-top: 8px; }
+.backHome { justify-self: start; }
+.rowList { display: grid; padding: 4px; border-radius: var(--r-lg); }
+.rowList > li + li { border-top: 1px solid var(--line-soft); }
+.resultRow { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 10px 12px; border: 0; border-radius: var(--r-md); background: none; color: var(--text); text-align: left; }
+.resultRow:hover { background: var(--hover); }
+.rowIcon { flex: none; display: grid; place-items: center; width: 48px; height: 48px; overflow: hidden; border-radius: 14px; background: var(--surface-2); color: var(--icon); font-size: 1.45rem; line-height: 1; }
+.rowIcon img { width: 100%; height: 100%; object-fit: cover; }
+.rowText { display: grid; gap: 2px; min-width: 0; }
+.rowTitle { font-weight: 700; line-height: 1.3; }
+.rowLine { color: var(--muted); font-size: 0.88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rowMeta { display: flex; flex-wrap: wrap; gap: 4px 10px; color: var(--muted); font-size: 0.78rem; }
+.searchEmpty { padding: 32px 8px; }
+/* 오래된 정보: 결과 줄에서는 작은 표시로 */
+.rowStale { padding: 0 6px; border-radius: var(--r-pill); background: var(--warn-bg); color: var(--warn-fg); font-weight: 600; }
+/* 검색 첫 화면의 바로 가기: 입구 3개와 같은 폭·같은 유리 타일로 그 아래에 놓는다 */
+.searchHero .quickBar { width: min(100%, 420px); }
+.searchHero .quickBar ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.searchHero .quickItem { min-height: 56px; }
+.searchHero .quickIcon { background: none; color: var(--icon); }
+
+@media (min-width: 1024px) {
+  /* 첫 화면에서는 옆 패널을 위쪽 머리글로 바꾸고 가운데를 넓게 쓴다 */
+  .app[data-home] .side {
+    position: static;
+    width: auto;
+    margin: var(--edge) var(--edge) 0;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+  .app[data-home] .side .sideNav.segmented { grid-column: 2; grid-row: 1; width: auto; }
+  .app[data-home] .side .sideNav.segmented button { white-space: nowrap; padding-inline: 16px; }
+  .app[data-home] .side .sideHead { grid-column: 1; }
+  .app[data-home] .main { margin-left: 0; padding: var(--edge) 32px 40px; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .chipPage { animation: chipsIn 0.32s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .chipPage.leaving { animation: chipsOut 0.28s ease-in forwards; }
+  .resultRow, .entry { transition: background-color 0.15s, box-shadow 0.15s; }
+}
+@keyframes chipsIn { from { transform: translateY(14px); opacity: 0; } }
+@keyframes chipsOut { to { transform: translateY(-14px); opacity: 0; } }
+
 @keyframes drift { to { transform: translate(8vmax, 6vmax); } }
 @keyframes rise { from { transform: translateY(40px); opacity: 0.4; } }
 @keyframes slideIn { from { transform: translateX(40px); opacity: 0; } }

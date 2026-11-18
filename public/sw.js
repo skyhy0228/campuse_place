@@ -1,5 +1,6 @@
 // 오프라인에서도 한 번 열어본 화면을 볼 수 있게 하는 서비스 워커.
-// - 페이지(HTML)와 데이터(places.json)는 네트워크 우선: 배포된 최신 내용을 먼저 쓰고, 실패하면 저장본을 쓴다.
+// - 페이지(HTML)와 데이터(places.json, topics.json)는 네트워크 우선: 배포된 최신 내용을 먼저 쓰고, 실패하면 저장본을 쓴다.
+//   (두 데이터는 소주제 배정으로 서로 맞물려 있어 같은 방식으로 받는다)
 // - 해시가 붙은 빌드 파일(assets/)·이미지·아이콘은 저장본 우선.
 // - 그 외 같은 출처의 GET 요청은 저장본을 먼저 보여주고 뒤에서 갱신한다.
 const CACHE = "campuse-place-v1";
@@ -54,7 +55,7 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin || !url.pathname.startsWith(BASE)) return;
 
   if (request.mode === "navigate") event.respondWith(networkFirst(request, BASE));
-  else if (url.pathname === `${BASE}data/places.json`) event.respondWith(networkFirst(request));
+  else if (url.pathname === `${BASE}data/places.json` || url.pathname === `${BASE}data/topics.json`) event.respondWith(networkFirst(request));
   else if (/^(assets|images|icons)\//.test(url.pathname.slice(BASE.length))) event.respondWith(cacheFirst(request));
   else event.respondWith(staleWhileRevalidate(request));
 });

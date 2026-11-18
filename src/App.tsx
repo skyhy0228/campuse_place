@@ -1,4 +1,4 @@
-import { Map as MapIcon, MapPin, MapPinPlus, RotateCcw, School, Search, SearchX, TriangleAlert, UserRound, House, X } from "lucide-react";
+import { ArrowLeft, Map as MapIcon, MapPin, MapPinPlus, RotateCcw, School, Search, SearchX, TriangleAlert, UserRound, House, X } from "lucide-react";
 import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { AccountDialog } from "./components/AccountDialog";
 import { AuthDialog } from "./components/AuthDialog";
@@ -15,6 +15,8 @@ import { PopularStrip } from "./components/PopularStrip";
 import { QuickBar } from "./components/QuickBar";
 import { RandomPick } from "./components/RandomPick";
 import { RoomFinder } from "./components/RoomFinder";
+import { SearchHero } from "./components/SearchHero";
+import { BrowseList, SearchResults } from "./components/SearchResults";
 import { SharedListBanner } from "./components/SharedListBanner";
 import { SideList } from "./components/SideList";
 import { SubmitDialog, type SubmitTarget } from "./components/SubmitDialog";
@@ -57,6 +59,8 @@ import {
   type CafeteriaMenu,
 } from "./lib/remote";
 import { newPlaceUrl } from "./lib/report";
+import { searchDocs } from "./lib/search";
+import { useTopics } from "./lib/topics";
 import { SessionProvider, useSession } from "./lib/session";
 import { shareLink, siteBase } from "./lib/share";
 import { sharedListFromParams, sharedListUrl, type SharedList } from "./lib/shareList";
@@ -126,6 +130,7 @@ function Main() {
   const [locating, setLocating] = useState(false);
   const [locateError, setLocateError] = useState("");
   const [shareStatus, setShareStatus] = useState("");
+  const topics = useTopics();
   const deferredQuery = useDeferredValue(filters.query);
   const patch = useCallback((change: Partial<Filters>) => setFilters((f) => ({ ...f, ...change })), []);
 
@@ -246,7 +251,11 @@ function Main() {
     [state, reported, overrides, stats, confirms],
   );
   const places = useMemo(() => allPlaces?.filter((p) => !p.closed) ?? null, [allPlaces]);
-  const categories = useMemo(() => (places ? buildCategories(places) : []), [places]);
+  // 입구 '맛집'에서는 분류 칩도 식당·카페만 보여 준다.
+  const categories = useMemo(() => {
+    const all = places ? buildCategories(places) : [];
+    return filters.entry === "food" ? all.filter((c) => c.value === "식당" || c.value === "카페") : all;
+  }, [places, filters.entry]);
 
   const listIds = useMemo(() => {
     if (filters.list === "fav") return favoriteIds;
@@ -258,7 +267,10 @@ function Main() {
   const distances = useMemo(() => (places && filters.sort === "near" ? distancesFrom(places, origin.pos) : null), [places, filters.sort, origin]);
 
   const visible = useMemo(
-    () => (places ? filterPlaces(places, { ...filters, query: deferredQuery }, listIds, now, distances) : []),
+    () =>
+      places
+        ? filterPlaces(places, { ...filters, query: deferredQuery }, listIds, now, distances).filter((p) => filters.entry !== "food" || p.isFood)
+        : [],
     [places, filters, deferredQuery, listIds, now, distances],
   );
 
@@ -322,9 +334,36 @@ function Main() {
   const showCafeteria = supabaseEnabled && (menus.length > 0 || session.isAdmin);
   const showBus = supabaseEnabled && (buses.length > 0 || session.isAdmin);
 
+  // 첫 화면 방식. 'search' = 검색 중심 첫 화면(검색어가 있으면 결과), 'browse' = 입구 장소·정보 둘러보기,
+  // '' = 예전 카드 목록(입구 맛집, 즐겨찾기·공유 목록, 분류·필터·가까운 순을 고른 주소, 소주제 사전을 못 불러온 경우).
+  const plainList =
+    currentView === "list" &&
+    !filters.list &&
+    !filters.category &&
+    !filters.food &&
+    !filters.campus &&
+    !filters.price &&
+    !filters.zone &&
+    !filters.intl &&
+    !filters.openNow &&
+    // 가까운 순은 거리가 붙은 카드 목록이 있어야 의미가 있다.
+    filters.sort !== "near";
+  const homeMode: "search" | "browse" | "" =
+    topics && plainList ? (filters.entry === "place" || filters.entry === "info" ? "browse" : filters.entry === "food" ? "" : "search") : "";
+  const searchResult = useMemo(
+    () => (homeMode === "search" && topics && places && deferredQuery.trim() ? searchDocs(places, topics.index, deferredQuery) : null),
+    [homeMode, topics, places, deferredQuery],
+  );
+  const byId = useMemo(() => new Map((places ?? []).map((p) => [p.id, p])), [places]);
+
   const resetFilters = () => {
     setFilters(DEFAULT_FILTERS);
     setShared(null);
+  };
+  // '홈'은 언제나 검색 첫 화면으로 돌아간다.
+  const goView = (next: View) => {
+    if (next === "list") resetFilters();
+    changeView(next);
   };
   const accountLabel = session.user ? t.myAccount(session.user.username) : t.login;
   const openAccount = () => (session.user ? session.openAccount() : session.openAuth("login"));
@@ -377,6 +416,18 @@ function Main() {
     changeView("admin");
   };
 
+  // 첫 화면 바로 가기: 검색 첫 화면에서는 입구 3개 아래에 놓는다.
+  const quickBar = (
+    <QuickBar
+      onPick={() => setPanel("pick")}
+      onAddPlace={addPlace}
+      onCafeteria={showCafeteria ? () => setPanel("cafeteria") : undefined}
+      onBus={showBus ? () => setPanel("bus") : undefined}
+      cafeteriaHint={todayMenus.length ? [...new Set(todayMenus.map((m) => m.cafeteria))].join(" · ") : undefined}
+      busHint={nextBus ? `${nextBus.time} · ${nextBus.line}` : undefined}
+    />
+  );
+
   const navItems: { view: View; label: string; icon: typeof House; show: boolean }[] = [
     { view: "list", label: t.navHome, icon: House, show: true },
     { view: "map", label: t.navMap, icon: MapIcon, show: canShowMap },
@@ -384,7 +435,7 @@ function Main() {
   ];
 
   return (
-    <div className="app" data-view={currentView}>
+    <div className="app" data-view={currentView} data-home={homeMode || undefined}>
       <div className="sky" aria-hidden="true">
         <span />
         <span />
@@ -417,7 +468,7 @@ function Main() {
           {navItems
             .filter((item) => item.show)
             .map((item) => (
-              <button key={item.view} type="button" aria-current={currentView === item.view ? "page" : undefined} onClick={() => changeView(item.view)}>
+              <button key={item.view} type="button" aria-current={currentView === item.view ? "page" : undefined} onClick={() => goView(item.view)}>
                 {item.label}
               </button>
             ))}
@@ -444,7 +495,7 @@ function Main() {
           )}
         </form>
 
-        {campus.data && deferredQuery.trim() && currentView !== "campus" && (
+        {campus.data && deferredQuery.trim() && currentView !== "campus" && !homeMode && (
           <RoomFinder data={campus.data} query={deferredQuery} room={room} onShowCampus={() => changeView("campus")} />
         )}
 
@@ -514,20 +565,52 @@ function Main() {
           />
         )}
 
-        {places && currentView === "list" && !filters.query && !filters.list && (
-          <QuickBar
-            onPick={() => setPanel("pick")}
-            onAddPlace={addPlace}
-            onCafeteria={showCafeteria ? () => setPanel("cafeteria") : undefined}
-            onBus={showBus ? () => setPanel("bus") : undefined}
-            cafeteriaHint={todayMenus.length ? [...new Set(todayMenus.map((m) => m.cafeteria))].join(" · ") : undefined}
-            busHint={nextBus ? `${nextBus.time} · ${nextBus.line}` : undefined}
-          />
+        {places && topics && homeMode === "search" && (
+          <SearchHero
+            query={filters.query}
+            onQuery={(query) => patch({ query })}
+            chips={topics.chipOrder}
+            onEntry={(entry) => {
+              patch({ entry, query: "" });
+              window.scrollTo({ top: 0 });
+            }}
+            below={quickBar}
+          >
+            {campus.data && room && <RoomFinder data={campus.data} query={deferredQuery} room={room} onShowCampus={() => changeView("campus")} />}
+            {searchResult && (
+              <SearchResults
+                query={deferredQuery}
+                result={searchResult}
+                byId={byId}
+                topics={topics}
+                suggestions={topics.chipOrder.slice(0, 4)}
+                now={now}
+                onOpen={openPlace}
+                onQuery={(query) => patch({ query })}
+                onAddPlace={addPlace}
+              />
+            )}
+          </SearchHero>
         )}
-        {places && currentView === "list" && !filters.query && !filters.list && <HomeTiles counts={tileCounts} filters={filters} patch={patch} />}
-        {places && currentView === "list" && !filtersActive && <PopularStrip places={popular} onOpen={openPlace} />}
+        {/* 소주제 사전을 못 불러와 예전 첫 화면을 쓸 때도 바로 가기는 보여 준다. */}
+        {places && !topics && currentView === "list" && !filters.query && !filters.list && quickBar}
 
-        {places && currentView !== "admin" && visible.length === 0 && !roomOnCampus && (
+        {places && topics && homeMode === "browse" && (filters.entry === "place" || filters.entry === "info") && (
+          <BrowseList entry={filters.entry} places={places} topics={topics} now={now} onOpen={openPlace} onBack={() => patch({ entry: "" })} />
+        )}
+
+        {places && currentView === "list" && filters.entry === "food" && !homeMode && (
+          <button type="button" className="button small backHome" onClick={() => patch({ ...DEFAULT_FILTERS })}>
+            <ArrowLeft size={16} aria-hidden="true" />
+            {t.entryBack}
+          </button>
+        )}
+        {places && currentView === "list" && !homeMode && !filters.query && !filters.list && (
+          <HomeTiles counts={tileCounts} filters={filters} patch={patch} />
+        )}
+        {places && currentView === "list" && !homeMode && !filtersActive && <PopularStrip places={popular} onOpen={openPlace} />}
+
+        {places && currentView !== "admin" && !homeMode && visible.length === 0 && !roomOnCampus && (
           <div className="notice empty">
             <SearchX size={28} aria-hidden="true" />
             <p>{filters.list === "fav" && !filters.query && !filters.category ? t.emptyFav : t.empty}</p>
@@ -578,7 +661,7 @@ function Main() {
           </Suspense>
         )}
 
-        {currentView === "list" && visible.length > 0 && (
+        {currentView === "list" && !homeMode && visible.length > 0 && (
           <>
             <h2 className={filtersActive ? "srOnly" : "listTitle"}>{filtersActive ? t.results : t.allPlaces}</h2>
             <ul className="grid">
@@ -636,7 +719,7 @@ function Main() {
         view={currentView}
         canShowMap={canShowMap}
         favoritesOn={filters.list === "fav"}
-        onView={changeView}
+        onView={goView}
         onFavorites={() => {
           patch({ list: filters.list === "fav" ? "" : "fav" });
           if (currentView !== "list") changeView("list");

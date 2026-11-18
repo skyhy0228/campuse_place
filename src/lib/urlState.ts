@@ -1,12 +1,13 @@
-import { DEFAULT_FILTERS, type Campus, type Filters, type PriceBand, type SortKey, type Zone } from "../types";
+import { DEFAULT_FILTERS, type Campus, type Entry, type Filters, type PriceBand, type SortKey, type Zone } from "../types";
 import { writeSharedList, type SharedList } from "./shareList";
 
 const SORTS: SortKey[] = ["recommendations", "rating", "name", "checked", "near"];
+const ENTRIES: Entry[] = ["food", "place", "info"];
 const CAMPUS: Campus[] = ["in", "out"];
 const PRICES: PriceBand[] = ["free", "under10", "10to20", "over20"];
 const ZONES: Zone[] = ["front", "city", "suburb"];
 
-// list = 홈(목록), map = 네이버 지도, campus = 캠퍼스 지도, admin = 관리자 화면
+// list = 홈(목록), map = 카카오 지도, campus = 캠퍼스 지도, admin = 관리자 화면
 export type View = "list" | "map" | "campus" | "admin";
 const VIEWS: View[] = ["map", "campus", "admin"];
 export const viewFromSearch = (search: string): View => {
@@ -30,6 +31,7 @@ export function filtersFromSearch(search: string): Filters {
     zone: pick(params.get("zone"), ZONES, ""),
     food: (params.get("food") ?? "").replace(/[^a-z-]/g, "").slice(0, 20),
     intl: params.get("intl") === "1",
+    entry: pick(params.get("go"), ENTRIES, ""),
   };
 }
 
@@ -48,6 +50,7 @@ export function filtersToSearch(filters: Filters, view: View = "list", shared: S
   if (filters.zone) params.set("zone", filters.zone);
   if (filters.food) params.set("food", filters.food);
   if (filters.intl) params.set("intl", "1");
+  if (filters.entry) params.set("go", filters.entry);
   if (view !== "list") params.set("view", view);
   const text = params.toString();
   return text ? `?${text}` : "";

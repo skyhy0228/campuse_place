@@ -15,7 +15,7 @@ interface Props {
 function Item({ icon, title, hint, onClick }: { icon: ReactNode; title: string; hint?: string; onClick: () => void }) {
   return (
     <li>
-      <button type="button" className="quickItem glass" onClick={onClick}>
+      <button type="button" className="quickItem glass liquid" onClick={onClick}>
         <span className="quickIcon" aria-hidden="true">
           {icon}
         </span>

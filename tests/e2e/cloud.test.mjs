@@ -3,7 +3,7 @@
 // 사용: npm run build:e2e 뒤 npm run test:e2e
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
-import { FAKE_KAKAO_MAPS, KAKAO_SDK_URL, axeScan, cards, launchBrowser, places, settle, startServer } from "./helpers.mjs";
+import { FAKE_KAKAO_MAPS, KAKAO_SDK_URL, axeScan, blockTopics, cards, launchBrowser, places, settle, startServer } from "./helpers.mjs";
 
 const SB = "https://e2e.supabase.test";
 const UID = "0a1b2c3d-0000-4000-8000-000000000001";
@@ -134,9 +134,11 @@ async function fakeSupabase(context, { admin = false } = {}) {
 }
 
 // 페이지를 열기 전에 가짜 Supabase 를 연결해야 하므로 helpers 의 withPage 대신 컨텍스트를 직접 만든다.
-async function runCloud(fn, { admin = false, url = "", viewport, checkErrors = true, ready = "article.card" } = {}) {
+// topics: false 면 소주제 사전을 막아 예전 첫 화면(카드 목록)으로 연다 (helpers.mjs 의 blockTopics 설명 참고).
+async function runCloud(fn, { admin = false, url = "", viewport, checkErrors = true, topics = false, ready = topics ? ".searchHero" : "article.card" } = {}) {
   const context = await browser.newContext({ viewport: viewport ?? { width: 1440, height: 900 }, locale: "ko-KR", serviceWorkers: "block" });
   await context.route(KAKAO_SDK_URL, (route) => route.fulfill({ contentType: "text/javascript", body: FAKE_KAKAO_MAPS }));
+  if (!topics) await blockTopics(context);
   const state = await fakeSupabase(context, { admin });
   const page = await context.newPage();
   const errors = [];
@@ -310,6 +312,22 @@ describe("Supabase: 정보 수정 반영 · 아직 맞아요 · 학식 · 버스
       await busDialog.locator(".busAll summary").first().click();
       await axeScan(page, "버스");
     }));
+
+  test("검색 첫 화면에서도 바로 가기에 학식·버스가 있고, 결과가 없으면 제보 창을 연다", () =>
+    runCloud(
+      async (page) => {
+        const quick = page.locator(".searchHero").getByRole("navigation", { name: "바로 가기" });
+        await quick.getByRole("button", { name: /오늘의 학식/ }).waitFor();
+        assert.match(await quick.getByRole("button", { name: /오늘의 학식/ }).innerText(), /학생식당/);
+        await quick.getByRole("button", { name: /다음 버스/ }).waitFor();
+        await axeScan(page, "검색 첫 화면 바로 가기(학식·버스)");
+
+        await page.fill("#heroSearch", "zzzz없는가게");
+        await page.locator(".searchEmpty").getByRole("button", { name: "장소 제보" }).click();
+        await page.locator("dialog[open]").waitFor();
+      },
+      { topics: true },
+    ));
 
   test("관리자 화면에서 학식을 입력하고 통계를 본다", () =>
     runCloud(

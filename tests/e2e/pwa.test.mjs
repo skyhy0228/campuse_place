@@ -29,24 +29,31 @@ describe("앱 설치(PWA)", () => {
     assert.equal((await fetch(`${BASE}og.png`)).status, 200);
   });
 
-  test("서비스 워커가 등록되고, 오프라인에서도 열어본 화면이 열린다", async () => {
+  // 서비스 워커를 켜면 그 요청은 테스트에서 가로챌 수 없으므로 소주제 사전을 막지 않고 실제 첫 화면(검색)으로 검사한다.
+  test("서비스 워커가 등록되고, 오프라인에서도 열어본 화면이 열리고 검색된다", async () => {
     await withPage(
       browser,
       async (page, context) => {
         await page.evaluate(() => navigator.serviceWorker.ready);
-        // 서비스 워커가 제어하는 상태에서 한 번 더 열어 데이터와 화면을 저장한다.
+        // 서비스 워커가 제어하는 상태에서 한 번 더 열어 데이터(장소·소주제 사전)와 화면을 저장한다.
         await page.reload();
-        await page.waitForSelector("article.card");
+        await page.waitForSelector(".searchHero");
         await page.evaluate(() => navigator.serviceWorker.ready);
         await page.waitForTimeout(800);
 
         await context.setOffline(true);
         await page.reload();
-        await page.waitForSelector("article.card", { timeout: 10_000 });
-        assert.equal(await cards(page).count(), places.length);
+        await page.waitForSelector(".searchHero .entries", { timeout: 10_000 });
+        await page.fill("#heroSearch", "택시");
+        await page.waitForSelector(".results .resultRow");
+        // 입구 '맛집'은 저장한 장소 데이터로 카드 목록을 그린다.
+        await page.fill("#heroSearch", "");
+        await page.getByRole("navigation", { name: "둘러보기" }).getByRole("button", { name: "맛집" }).click();
+        await page.waitForSelector("article.card");
+        assert.equal(await cards(page).count(), places.filter((p) => p.category === "식당" || p.category === "카페").length);
         await context.setOffline(false);
       },
-      { serviceWorkers: "allow", checkErrors: false },
+      { serviceWorkers: "allow", checkErrors: false, topics: true },
     );
   });
 });

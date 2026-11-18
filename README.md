@@ -51,7 +51,13 @@
   - 받은 사람은 로그인 없이 그 목록을 보고, 로그인하면 내 목록으로 저장할 수 있습니다.
 
 **보기**
-- 홈: 바로 가기(오늘 뭐 먹지 · 오늘의 학식 · 다음 버스 · 장소 제보), 사진 분류 타일, 추천 많은 곳 캐러셀, 카드 목록
+- 홈(검색 중심 첫 화면, 팀원 yufe9 디자인):
+  - 가운데 검색창, 5초마다 바뀌는 추천 주제 칩(멈춤 버튼, '동작 줄이기' 존중), 입구 3개(맛집 · 장소 · 정보)
+  - 입구 아래 바로 가기: 오늘 뭐 먹지 · 오늘의 학식 · 다음 버스 · 장소 제보
+  - 검색하면 소주제별 묶음으로 결과를 보여 줍니다(소주제 사전 `data/topics.json`, 배정표 `data/topic-assign.json`). 결과가 없으면 추천 검색어와 '장소 제보'를 권합니다.
+  - 입구 '맛집'은 사진 분류 타일·추천 많은 곳·카드 목록, '장소'·'정보'는 소주제별 둘러보기 목록입니다.
+  - 분류·필터·가까운 순·즐겨찾기·공유 목록을 고르면 옆 패널의 검색·필터와 카드 목록 화면이 됩니다.
+  - 소주제 사전을 불러오지 못하면 예전 첫 화면(바로 가기, 분류 타일, 추천 많은 곳, 전체 카드 목록)을 씁니다.
 - **오래된 정보**: 마지막으로 확인한 날(원본 확인한날과 회원의 '아직 맞아요' 중 늦은 날)에서 180일이 지나면 카드와 상세에 표시합니다. 날짜가 없는 항목은 판단하지 않습니다.
 - 상세: 대표 사진, 별점·거리·추천 수, 탭(소개 / 메뉴 / 정보 / 후기)
   - 소개: 한줄설명, 자세한 설명, 네이버 리뷰 키워드, 교통여지도 정리
@@ -168,12 +174,13 @@ VITE_SUPABASE_PUBLISHABLE_KEY= # sb_publishable_… (공개용 키)
 
 지도는 [Kakao Developers](https://developers.kakao.com) 앱의 **JavaScript 키**가 있어야 표시됩니다. 지도 구성(클러스터, 카카오맵 링크)은 팀원 프로젝트 교통여지도를 참고했습니다.
 
-1. 내 애플리케이션 → 애플리케이션 추가하기로 앱을 만듭니다.
-2. 앱 설정 → **플랫폼 → Web**에 사이트 도메인을 등록합니다. (JavaScript SDK 도메인)
-   - `https://skyhy0228.github.io`
+1. [앱 관리 페이지](https://developers.kakao.com/console/app)의 전체 앱 목록에서 **[앱 생성]**으로 앱을 만듭니다.
+2. **[카카오맵] → [사용 설정]**의 상태를 **ON**으로 바꿉니다. 이걸 켜지 않으면 키와 도메인이 맞아도 지도가 뜨지 않습니다.
+   - 무료 쿼터(웹 지도 하루 300,000건)는 개발자 계정에서 카카오맵을 처음 켠 앱 하나에만 주어집니다. 앱 정보의 [카카오맵 무료 쿼터] 배지로 확인합니다.
+3. **[앱] → [플랫폼 키] → [JavaScript 키] → [JavaScript SDK 도메인]**에 사이트 주소를 등록합니다. (2025년 12월 콘솔 개편 전 이름은 '플랫폼 → Web → 사이트 도메인')
+   - `https://skyhy0228.github.io` (경로 `/campuse_place/` 는 붙이지 않음)
    - 개발용 `http://localhost:5173`, `http://localhost:4173`
-3. 카카오맵 사용 설정이 꺼져 있으면 켭니다. (콘솔 메뉴 이름은 바뀔 수 있습니다)
-4. 앱 키의 **JavaScript 키**를 복사합니다. REST API 키·Admin 키는 쓰지 않습니다.
+4. 같은 화면의 **JavaScript 키**를 복사합니다. REST API 키·어드민 키는 쓰지 않습니다.
 5. 배포: 저장소 Settings → Secrets and variables → Actions → **Repository variables**에 `VITE_KAKAO_MAP_KEY`로 등록합니다.
 
 JavaScript 키는 브라우저에 공개되는 값이며, 등록한 도메인에서만 동작합니다. 다른 도메인에서 열면 지도 자리에 도메인 등록 안내가 나옵니다.
@@ -218,9 +225,11 @@ npm test             # 위 세 가지를 차례로
 - 검색, 필터, 상세, 카카오 지도, 로컬 계정, 접근성(axe), PWA
 - 팀원 기능: 중국어 모드, 캠퍼스 지도, 강의실 검색, 리뷰 키워드
 - 새 기능: 오늘 뭐 먹지, 가까운 순(가짜 위치), 공유받은 목록, 영어 화면, 오래된 정보, 장소 제보 바로 가기 (`tests/e2e/features.test.mjs`)
+- 검색 중심 첫 화면: 추천 주제, 검색 결과, 결과 없음, 입구 3개, 바로 가기, 둘러보기의 오래된 정보, 영어·휴대폰·접근성 (`tests/e2e/home.test.mjs`)
 - Supabase 흐름: 로그인·후기·제보, 정보 수정 반영, 아직 맞아요, 학식·버스, 관리자 입력·통계
 
 참고:
+- 카드 목록·필터·정렬을 검사하는 테스트는 소주제 사전(`topics.json`) 요청을 막아 예전 첫 화면(전체 카드 목록)에서 돌립니다. 검색 첫 화면은 `home.test.mjs`와 PWA 테스트가 사전을 켠 채 검사합니다 (`tests/e2e/helpers.mjs`의 `blockTopics`).
 - 카카오 지도 SDK와 Supabase 서버는 가짜로 바꿔 끼워, 실제 키·네트워크 없이 화면 동작과 보내는 요청을 확인합니다 (`tests/e2e/helpers.mjs`, `tests/e2e/cloud.test.mjs`). 그래서 **실제 Supabase의 RLS·함수는 자동 테스트하지 않습니다.** 프로젝트를 만든 뒤 가입 → 후기 → 제보 → 관리자 승인을 한 번 직접 확인하세요.
 - 접근성 테스트는 axe-core(WCAG 2.1 A/AA + 모범 사례, 색 대비 포함)를 실행합니다. 대상은 밝은/어두운 화면의 목록·상세·중국어·영어 화면·언어 메뉴·가까운 순·오늘 뭐 먹지·공유 목록·오래된 정보·캠퍼스 지도·계정 화면, 그리고 학식·버스·관리자 화면입니다.
 - GitHub Actions는 `main`에 push할 때마다 테스트를 통과해야 배포합니다.
@@ -292,15 +301,16 @@ campuse_place/
 ├─ supabase/schema.sql                     Supabase 테이블·RLS·함수·보관함
 ├─ src/
 │  ├─ App.tsx, main.tsx, styles.css, types.ts
-│  ├─ components/  레이아웃(Controls, HomeTiles, QuickBar, TabBar, SideList, LangToggle, SharedListBanner),
+│  ├─ components/  첫 화면(SearchHero, RotatingChips, SearchResults·BrowseList),
+│  │               레이아웃(Controls, HomeTiles, QuickBar, TabBar, SideList, LangToggle, SharedListBanner),
 │  │               장소(PlaceCard, PlaceDialog, PopularStrip, RandomPick), 생활(CafeteriaDialog, BusDialog),
 │  │               지도(PlaceMap, PlaceMiniMap, CampusMap, RoomFinder), 회원(CloudAuthDialog, AuthDialog, AccountDialog,
 │  │               CollectionPicker, Reviews, SubmitDialog, AdminPage, AdminData)
 │  └─ lib/         places, i18n, campus·campusData, supabase·remote·submissionPlace, session·auth·userData,
 │                  kakaoMap·useKakaoMap, cover, photo, hours, choseong, urlState, theme, report, useGlassSheen,
 │                  nearby(거리), pick(랜덤 추천), shareList·share(목록 공유), dates(한국 날짜·오래된 정보),
-│                  bus(버스 시간), overrides(정보 수정 반영)
+│                  bus(버스 시간), overrides(정보 수정 반영), search·topics(소주제 검색)
 └─ tests/
-   ├─ unit/        derive, teams, campus, log-issue, features
-   └─ e2e/         site, map, auth, a11y, pwa, teams, features, cloud (+ helpers)
+   ├─ unit/        derive, teams, campus, log-issue, features, search
+   └─ e2e/         site, map, auth, a11y, pwa, teams, features, home, cloud (+ helpers)
 ```
